@@ -8,7 +8,6 @@ import {
   Dumbbell,
   Apple,
   BarChart3,
-  User,
 } from 'lucide-react'
 
 const navigation = [
@@ -16,15 +15,14 @@ const navigation = [
   { name: 'Workouts', href: '/workouts', icon: Dumbbell },
   { name: 'Nutrition', href: '/nutrition', icon: Apple },
   { name: 'Progress', href: '/progress', icon: BarChart3 },
-  { name: 'Profile', href: '/profile', icon: User },
 ]
 
 export function MobileNav() {
   const pathname = usePathname()
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden">
-      <div className="grid grid-cols-5 h-16">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t z-40 lg:hidden">
+      <div className="flex items-center justify-around px-2 py-2">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -32,16 +30,16 @@ export function MobileNav() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center space-y-1',
-                isActive ? 'text-orange-600' : 'text-gray-400'
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-0",
+                isActive ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.name}</span>
+              <item.icon className="w-5 h-5" />
+              <span className="text-xs font-medium truncate">{item.name}</span>
             </Link>
           )
         })}
       </div>
-    </div>
+    </nav>
   )
 }

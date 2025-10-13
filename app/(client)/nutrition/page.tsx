@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Apple, Flame, Target, Plus, TrendingUp, Utensils } from "lucide-react"
 import Link from "next/link"
-import { DashboardLayout } from "@/components/layouts/dashboard-layout"
 
 export default function NutritionPage() {
   const dailyGoals = {
@@ -106,8 +105,7 @@ export default function NutritionPage() {
   ]
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -327,6 +325,5 @@ export default function NutritionPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   )
 }

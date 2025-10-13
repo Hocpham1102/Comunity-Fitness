@@ -1,7 +1,7 @@
 ---
 description: Cursor Rules Writing and Optimization Guide
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
 
 When writing or modifying a Cursor Rule, please follow the guidelines below:

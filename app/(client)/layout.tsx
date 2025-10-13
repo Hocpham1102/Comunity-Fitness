@@ -1,34 +1,43 @@
+'use client'
+
+import { useState } from 'react'
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar'
 import { DashboardNav } from '@/components/layouts/DashboardNav'
 import { MobileNav } from '@/components/layouts/MobileNav'
-import { useIsMobile } from '@/lib/client/hooks/useIsMobile'
+import { useMobile } from '@/hooks/use-mobile'
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const isMobile = useMobile()
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Layout */}
-      <div className="hidden md:flex min-h-screen">
-        <DashboardSidebar />
-        <div className="flex-1 flex flex-col">
-          <DashboardNav />
-          <main className="flex-1 p-6">
-            {children}
-          </main>
-        </div>
+    <div className="min-h-screen bg-background">
+      {/* Sidebar */}
+      <DashboardSidebar 
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        isMobile={isMobile}
+      />
+
+      {/* Main Content */}
+      <div className="lg:pl-64">
+        {/* Header */}
+        <DashboardNav 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          isMobile={isMobile}
+        />
+
+        {/* Page Content */}
+        <main className="p-4 lg:p-8 pb-20 lg:pb-8">{children}</main>
       </div>
 
-      {/* Mobile Layout */}
-      <div className="md:hidden flex flex-col min-h-screen">
-        <DashboardNav />
-        <main className="flex-1 p-4 pb-20">
-          {children}
-        </main>
-        <MobileNav />
-      </div>
+      {/* Mobile Bottom Navigation */}
+      {isMobile && <MobileNav />}
     </div>
   )
 }

@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Award, Target, Dumbbell, Flame } from "lucide-react"
-import { DashboardLayout } from "@/components/layouts/dashboard-layout"
 import {
   LineChart,
   Line,
@@ -62,8 +61,7 @@ export default function ProgressPage() {
   ]
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold mb-2">Progress Tracking</h1>
@@ -289,6 +287,5 @@ export default function ProgressPage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
   )
 }
