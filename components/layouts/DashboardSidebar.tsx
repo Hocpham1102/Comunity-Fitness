@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   Home,
   Dumbbell,
@@ -10,6 +12,7 @@ import {
   BarChart3,
   User,
   Users,
+  X,
 } from 'lucide-react'
 
 const navigation = [
@@ -22,21 +25,34 @@ const navigation = [
 ]
 
 interface DashboardSidebarProps {
-  sidebarOpen: boolean
-  setSidebarOpen: (open: boolean) => void
-  isMobile: boolean
+  readonly sidebarOpen: boolean
+  readonly setSidebarOpen: (open: boolean) => void
+  readonly isMobile: boolean
 }
 
 export function DashboardSidebar({ sidebarOpen, setSidebarOpen, isMobile }: DashboardSidebarProps) {
   const pathname = usePathname()
 
+  // Handle Escape key to close sidebar on mobile
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sidebarOpen && isMobile) {
+        setSidebarOpen(false)
+      }
+    }
+    
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [sidebarOpen, isMobile, setSidebarOpen])
+
   return (
     <>
       {/* Mobile overlay */}
       {sidebarOpen && isMobile && (
-        <div
+        <button
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar"
         />
       )}
 
@@ -49,13 +65,22 @@ export function DashboardSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Dash
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b">
+          <div className="p-6 border-b flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-2xl">🥕</span>
               </div>
               <span className="font-bold text-xl">Fitness Carrot</span>
             </Link>
+            {/* Close button - mobile only */}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden"
+            >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
 
           {/* Navigation */}
