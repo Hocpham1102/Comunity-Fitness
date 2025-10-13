@@ -1,0 +1,30 @@
+---
+description: Cursor Rules Writing and Optimization Guide
+globs:
+alwaysApply: false
+---
+
+When writing or modifying a Cursor Rule, please follow the guidelines below:
+
+- When you know the rule’s filename, use `read_file` instead of `fetch_rules` to read it.  
+  All rule files are located in the `.cursor/rules/` folder at the root of the project.
+
+- Code Examples  
+  - Examples should be concise and only include the core demonstration.  
+  - Remove any import/export statements unrelated to the example, but keep necessary imports.  
+  - If multiple examples exist in the same file and module imports have already been shown, you may omit repeated imports in subsequent examples.  
+  - Do not include `export` statements.  
+  - Omit unrelated or redundant props, configuration object properties, try/catch blocks, CSS, and other non-essential code.  
+  - Remove unnecessary comments, but keep those that aid understanding.
+
+- Formatting  
+  - Before making edits, confirm the original document’s language and maintain consistency.  
+  - Use `-` consistently for unordered lists.  
+  - Do not end list items with a period.  
+  - Avoid using bold text, inline code, or other rich formatting unless necessary. Rules are primarily for LLMs to read.  
+  - Avoid line-by-line bilingual comparisons. If parentheses contain examples rather than translations, they may be kept.
+
+- Review  
+  - Fix any Markdown syntax errors.  
+  - Correct spelling mistakes.  
+  - Point out any inconsistencies between examples and their explanations.

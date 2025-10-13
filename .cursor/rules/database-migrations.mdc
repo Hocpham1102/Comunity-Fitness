@@ -1,0 +1,211 @@
+---
+description: Prisma + PostgreSQL Migration Guide
+alwaysApply: false
+---
+
+# 🧩 Database Migrations Guide (Prisma + PostgreSQL)
+
+This guide explains how to safely manage and deploy Prisma migrations in a PostgreSQL environment — especially when working in teams or using Docker.
+
+---
+
+## 🚀 Core Workflow
+
+### 1. Modify the Schema
+
+Whenever you change your `schema.prisma` file (e.g., add models, remove fields, or change data types):
+
+Run this in your **local development environment**:
+```bash
+npx prisma migrate dev --name <migration_name>
+````
+
+**Example:**
+
+```bash
+npx prisma migrate dev --name add_phone_to_profile
+```
+
+**What this does:**
+
+* Compares your `schema.prisma` with the current database schema.
+* Creates a new migration SQL file under:
+
+  ```
+  prisma/migrations/<timestamp>_<migration_name>/migration.sql
+  ```
+* Applies this migration to your local database.
+* Regenerates the Prisma Client to reflect the new schema.
+
+---
+
+### 2. Commit the Migration
+
+After verifying that the migration works locally:
+
+✅ Commit the **entire `prisma/migrations` folder** to Git.
+This folder is the **source of truth** for your database schema history.
+
+---
+
+### 3. Deploy the Migration
+
+In **staging** or **production**, use:
+
+```bash
+npx prisma migrate deploy
+```
+
+**This command will:**
+
+* Run only unapplied migrations from your committed `prisma/migrations` folder.
+* Avoid creating new migrations or resetting data.
+* Ensure safe and predictable schema updates in production or CI/CD pipelines.
+
+---
+
+## ⚙️ Environment Setup
+
+Your Docker PostgreSQL connection string should look like:
+
+```env
+DATABASE_URL="postgresql://postgres:Admin@123@localhost:5433/fitness_carrot?schema=public"
+```
+
+Make sure this environment variable is set before running Prisma commands.
+
+---
+
+## ✨ Best Practices
+
+### 1. Use Clear Migration Names
+
+Always include a meaningful name when running `prisma migrate dev`, e.g.:
+
+```bash
+npx prisma migrate dev --name create_user_roles
+```
+
+---
+
+### 2. Never Edit `migration.sql` Manually
+
+Prisma generates and manages migration files automatically.
+Manual edits can cause **drift** between your schema and database.
+If you must run custom SQL, create a blank migration and place your custom queries there.
+
+---
+
+### 3. Review Migrations in Pull Requests
+
+Treat migration files like application code.
+When reviewing PRs, check:
+
+* SQL statements in `migration.sql`
+* Any destructive actions (`DROP`, `ALTER TYPE`, etc.)
+* Indexes and constraints added or removed
+
+---
+
+### 4. Handling Merge Conflicts
+
+When two developers create migrations on separate branches:
+
+1. Merge or rebase your branch with `main` or `develop`.
+2. Delete your local migration folder (that hasn’t been merged yet).
+3. Rerun:
+
+   ```bash
+   npx prisma migrate dev --name <new_name>
+   ```
+
+   Prisma will generate a new migration compatible with the latest schema.
+
+---
+
+### 5. Be Careful with Breaking Changes
+
+Operations like:
+
+* Renaming columns
+* Changing column types with existing data
+* Adding `NOT NULL` to columns with null values
+
+These can break production.
+To avoid downtime:
+
+* Perform **stepwise migrations** (e.g., add new column → backfill → drop old column).
+* Use **feature flags** to deploy schema changes gradually.
+
+---
+
+### 6. Use Prisma Seeding for Initial Data
+
+To seed initial or default data (e.g., admin account, roles):
+
+Create a `prisma/seed.ts` file, then add to `package.json`:
+
+```json
+"prisma": {
+  "seed": "ts-node prisma/seed.ts"
+}
+```
+
+Run:
+
+```bash
+npx prisma db seed
+```
+
+---
+
+## 🌐 Development vs Production Commands
+
+| Feature     | `npx prisma migrate dev`          | `npx prisma migrate deploy`    |
+| :---------- | :-------------------------------- | :----------------------------- |
+| Environment | Development (Local)               | Staging / Production           |
+| Function    | Create + apply migrations         | Only apply existing migrations |
+| Risk        | ⚠️ May reset DB if drift detected | ✅ Safe for production          |
+| Use Case    | When editing schema               | When deploying                 |
+
+---
+
+## 🛠️ Troubleshooting
+
+### Schema Drift (Database ≠ Migrations)
+
+**Cause:** Someone modified the DB manually (e.g., via pgAdmin).
+**Solution (Dev):**
+
+```bash
+npx prisma migrate dev
+```
+
+Prisma will prompt you to reset your database to match the current schema.
+**Solution (Prod):**
+Create a new migration to fix schema drift — **never manually edit the production DB.**
+
+---
+
+### Migration Fails in Production
+
+**Causes:**
+
+* SQL constraint violations (e.g., duplicate values for a unique column)
+* Incorrect data type conversions
+
+**Fix:**
+
+1. Correct the schema or fix conflicting data.
+2. Create a **new** migration.
+3. Redeploy using `npx prisma migrate deploy`.
+4. In emergency cases, you may use:
+
+   ```bash
+   npx prisma migrate resolve
+   ```
+
+   to mark a failed migration as applied — use this only as a last resort.
+
+---
+

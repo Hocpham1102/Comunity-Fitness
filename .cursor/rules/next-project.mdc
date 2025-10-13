@@ -1,0 +1,179 @@
+---
+description: Next.js + Prisma project rule for Fitness Carrot
+alwaysApply: true
+---
+
+# Fitness Carrot — Next.js Project Rule
+
+This rule captures the essential conventions, folder layout, and operational guidance for the Fitness Carrot Next.js project (Next 15+, TypeScript, App Router, Prisma)
+
+* Keep rules concise and actionable
+* Use `read_file` when a specific rule filename is known
+* Examples are minimal and show only essential commands or snippets
+
+---
+
+## Repository Structure (canonical)
+
+* Use this layout as source-of-truth
+
+```
+src/
+├── app/
+│   ├── (public)/
+│   ├── (client)/
+│   ├── (admin)/
+│   ├── api/
+│   └── layout.tsx
+├── components/
+│   ├── ui/
+│   ├── features/
+│   └── layouts/
+├── lib/
+│   ├── server/db/
+│   ├── server/services/
+│   └── client/hooks/
+├── hooks/
+├── providers/
+└── styles/
+```
+
+* Keep examples and feature code inside `src/`
+* Avoid large example/demo routes inside `app/` of production repo, move to `examples/` if needed
+
+---
+
+## Prisma & Database
+
+* Use Prisma as single ORM for PostgreSQL
+* Singleton Prisma client at `src/lib/server/db/prisma.ts`
+* Workflow for schema changes (local dev):
+
+  ```bash
+  npx prisma migrate dev --name <migration_name>
+  npx prisma generate
+  ```
+* Deploy migrations in CI/prod:
+
+  ```bash
+  npx prisma migrate deploy
+  ```
+* Use seeding:
+
+  * `prisma/seed.ts`
+  * `package.json` prisma.seed config
+
+  ```json
+  "prisma": { "seed": "ts-node prisma/seed.ts" }
+  ```
+* Do not edit generated `migration.sql` manually
+* On merge conflicts for migrations: delete local migration folder and re-run `prisma migrate dev --name <name>`
+
+---
+
+## Auth & Middleware
+
+* Use NextAuth v5 + Prisma adapter
+* Keep `auth.config.ts` edge-compatible
+* Middleware `middleware.ts` for RBAC
+
+  * `/dashboard/*` → authenticated
+  * `/admin/*` → role ADMIN
+  * `/trainer/*` → role TRAINER or ADMIN
+* Store role in session/jwt claims via callbacks
+
+---
+
+## App Router & Layouts
+
+* Use route groups for three layout system
+
+  * `app/(public)/layout.tsx`
+  * `app/(client)/layout.tsx`
+  * `app/(admin)/layout.tsx`
+* Prefer Server Components; add `'use client'` only where needed
+* Use `revalidateTag` pattern for caching and invalidate on mutations
+
+---
+
+## UI & Components
+
+* Use shadcn/ui primitives and Tailwind
+* Keep `components/ui` primitives small and reusable
+* Heavy components (charts, large editors) should be dynamically imported
+
+  ```ts
+  const Chart = dynamic(() => import('@/components/features/charts/Chart'))
+  ```
+
+---
+
+## API & Server Layer
+
+* Keep thin API route handlers and put business logic in `lib/server/services`
+* Use Zod for validation and types
+* Use Server Actions for mutations where appropriate
+* Example server action pattern
+
+  ```ts
+  export async function createWorkout(data: CreateWorkoutDto) {
+    const validated = workoutSchema.parse(data)
+    return prisma.workout.create({ data: validated })
+  }
+  ```
+
+---
+
+## Dev Performance & Build
+
+* Recommended dev flags:
+
+  * `next dev --turbo` when Turbopack is stable for your project
+  * Skip lint during dev: `next dev --no-lint` or set `eslint: { ignoreDuringBuilds: true }`
+* Use dynamic import for heavy components
+* Keep `public/` small; large static assets in CDN
+* For Docker dev, mount `node_modules` volume and cache `.next`
+
+---
+
+## Caching & Revalidation
+
+* Tag resources by domain: `['workouts']`, `['meals']`
+* Use `revalidateTag` after mutations
+* Use ISR for public product pages where appropriate
+
+---
+
+## Security & Best Practices
+
+* Validate environment variables using Zod
+* Do not run `prisma migrate dev` in production
+* Use `npx prisma migrate deploy` in CI
+* Avoid manual changes to production DB
+
+---
+
+## Testing & CI
+
+* Use `vitest` and `@testing-library/react`
+* Run migrations and `prisma generate` in CI before building
+* Example CI step (pseudo):
+
+  ```yaml
+  - run: npx prisma migrate deploy
+  - run: npx prisma generate
+  - run: npm run build
+  ```
+
+---
+
+## Notes for Rule Authors
+
+* Keep examples minimal and focused on commands and small snippets
+* Maintain English for project-wide rules unless repo uses another primary language
+* When referencing files, use `read_file` to fetch specific rule files under `.cursor/rules/`
+* Update this rule if project conventions change
+
+---
+
+End of rule

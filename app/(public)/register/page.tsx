@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterFormData } from '@/lib/shared/schemas/auth.schema'
-import bcrypt from 'bcryptjs'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -35,9 +34,7 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      const hashedPassword = await bcrypt.hash(data.password, 12)
-
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +42,8 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: data.name,
           email: data.email,
-          password: hashedPassword,
+          password: data.password,
+          confirmPassword: data.confirmPassword,
           role: data.role,
         }),
       })

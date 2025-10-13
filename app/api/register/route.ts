@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/server/db/prisma'
 import { registerSchema } from '@/lib/shared/schemas/auth.schema'
+import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,39 +9,54 @@ export async function POST(request: NextRequest) {
     
     // Validate the request body
     const validatedData = registerSchema.parse(body)
+    const { name, email, password, role } = validatedData
     
     // Check if user already exists
     const existingUser = await db.user.findUnique({
       where: {
-        email: validatedData.email,
+        email,
       },
     })
 
     if (existingUser) {
       return NextResponse.json(
         { message: 'User with this email already exists' },
-        { status: 400 }
+        { status: 409 }
       )
     }
 
-    // Create the user
-    const user = await db.user.create({
-      data: {
-        name: validatedData.name,
-        email: validatedData.email,
-        password: validatedData.password, // Already hashed in the frontend
-        role: validatedData.role,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
+    // Hash password on the server
+    const hashedPassword = await bcrypt.hash(password, 12)
+
+    // Create the user and profile in a transaction
+    const result = await db.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      })
+
+      // Create empty profile for easier onboarding
+      await tx.profile.create({
+        data: {
+          userId: user.id,
+        },
+      })
+
+      return user
     })
 
     return NextResponse.json(
-      { message: 'User created successfully', user },
+      { message: 'User created successfully', user: result },
       { status: 201 }
     )
   } catch (error) {
@@ -48,7 +64,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json(
-        { message: 'Invalid input data' },
+        { message: 'Invalid input data', errors: error.issues },
         { status: 400 }
       )
     }
