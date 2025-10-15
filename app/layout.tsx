@@ -4,6 +4,8 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { SessionProvider } from 'next-auth/react'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+import { NotificationsProvider } from '@/providers/notifications-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -83,8 +85,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
-            <Analytics />
+            <NotificationsProvider>
+              {children}
+              <Toaster />
+              <Analytics />
+            </NotificationsProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>

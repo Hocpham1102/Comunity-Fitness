@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
+import { useNotify, useConfirm } from '@/providers/notifications-provider'
 
 interface ExerciseItem {
   id: string
@@ -26,13 +27,32 @@ export default function ExerciseTable({ items }: Props) {
   const rows = useMemo(() => items, [items])
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const notify = useNotify()
+  const confirm = useConfirm()
 
   const handleDelete = async (id: string) => {
-    const ok = window.confirm('Delete this exercise?')
-    if (!ok) return
-    const res = await fetch(`/api/exercises/${id}`, { method: 'DELETE' })
-    if (!res.ok) return
-    startTransition(() => router.refresh())
+    const ok = await confirm({
+      title: 'Delete this exercise?',
+      description: 'This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+    })
+    if (!ok) {
+      notify.info({ title: 'Cancelled', description: 'No changes were made.' })
+      return
+    }
+    try {
+      const res = await fetch(`/api/exercises/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        notify.error({ title: 'Delete failed', description: payload?.message ?? 'Please try again.' })
+        return
+      }
+      notify.success({ title: 'Deleted', description: 'Exercise removed successfully.' })
+      startTransition(() => router.refresh())
+    } catch (e) {
+      notify.error({ title: 'Network error', description: 'Could not delete. Check your connection.' })
+    }
   }
 
   return (
