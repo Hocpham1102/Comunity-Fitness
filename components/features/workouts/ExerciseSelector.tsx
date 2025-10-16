@@ -16,69 +16,7 @@ interface ExerciseSelectorProps {
   onExercisesChange: (exercises: WorkoutExerciseConfig[]) => void
 }
 
-// Mock exercises for development (will be replaced with real data)
-const MOCK_EXERCISES: Exercise[] = [
-  {
-    id: '1',
-    name: 'Push-ups',
-    description: 'Classic bodyweight exercise for chest and triceps',
-    muscleGroups: ['CHEST', 'TRICEPS', 'SHOULDERS'],
-    equipment: ['BODYWEIGHT'],
-    difficulty: 'BEGINNER',
-    isPublic: true,
-    thumbnailUrl: '',
-  },
-  {
-    id: '2',
-    name: 'Bench Press',
-    description: 'Barbell exercise for chest development',
-    muscleGroups: ['CHEST', 'TRICEPS', 'SHOULDERS'],
-    equipment: ['BARBELL'],
-    difficulty: 'INTERMEDIATE',
-    isPublic: true,
-    thumbnailUrl: '',
-  },
-  {
-    id: '3',
-    name: 'Squats',
-    description: 'Compound exercise for legs and glutes',
-    muscleGroups: ['QUADS', 'GLUTES', 'HAMSTRINGS'],
-    equipment: ['BODYWEIGHT'],
-    difficulty: 'BEGINNER',
-    isPublic: true,
-    thumbnailUrl: '',
-  },
-  {
-    id: '4',
-    name: 'Deadlifts',
-    description: 'Full body compound movement',
-    muscleGroups: ['BACK', 'GLUTES', 'HAMSTRINGS', 'FOREARMS'],
-    equipment: ['BARBELL'],
-    difficulty: 'ADVANCED',
-    isPublic: true,
-    thumbnailUrl: '',
-  },
-  {
-    id: '5',
-    name: 'Pull-ups',
-    description: 'Upper body pulling exercise',
-    muscleGroups: ['BACK', 'BICEPS'],
-    equipment: ['BODYWEIGHT'],
-    difficulty: 'INTERMEDIATE',
-    isPublic: true,
-    thumbnailUrl: '',
-  },
-  {
-    id: '6',
-    name: 'Plank',
-    description: 'Core stability exercise',
-    muscleGroups: ['ABS', 'OBLIQUES'],
-    equipment: ['BODYWEIGHT'],
-    difficulty: 'BEGINNER',
-    isPublic: true,
-    thumbnailUrl: '',
-  },
-]
+// Data comes from REST API /api/exercises
 
 const MUSCLE_GROUP_LABELS = {
   CHEST: 'Chest',
@@ -135,7 +73,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
     checkMobile()
   }, [])
 
-  // Load exercises
+  // Load exercises on mount
   useEffect(() => {
     loadExercises()
   }, [])
@@ -143,9 +81,13 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
   const loadExercises = async () => {
     setIsLoading(true)
     try {
-      // For now, use mock data. Later replace with: await getExercises()
-      setExercises(MOCK_EXERCISES)
-      setFilteredExercises(MOCK_EXERCISES)
+      const params = new URLSearchParams({ page: '1', pageSize: '100' })
+      const res = await fetch(`/api/exercises?${params.toString()}`, { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to fetch exercises')
+      const data = await res.json()
+      const items: Exercise[] = data.items ?? data
+      setExercises(items)
+      setFilteredExercises(items)
     } catch (error) {
       console.error('Error loading exercises:', error)
       toast({

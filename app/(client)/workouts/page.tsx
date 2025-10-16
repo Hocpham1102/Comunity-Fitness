@@ -1,73 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Dumbbell, Clock, Flame, Search, Plus, TrendingUp } from "lucide-react"
+import { Dumbbell, Clock, Search, Plus, TrendingUp, Flame } from "lucide-react"
 import Link from "next/link"
+import { headers } from "next/headers"
 
-export default function WorkoutsPage() {
-  const workoutTemplates = [
-    {
-      id: 1,
-      name: "Upper Body Strength",
-      description: "Build muscle and strength in your chest, back, and arms",
-      duration: 45,
-      exercises: 8,
-      difficulty: "Intermediate",
-      calories: 350,
-      category: "Strength",
+async function getBaseUrl() {
+  const hdrs = await headers()
+  const host = hdrs.get('host')
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http'
+  return `${proto}://${host}`
+}
+
+export default async function WorkoutsPage() {
+  const base = process.env.NEXT_PUBLIC_APP_URL || (await getBaseUrl())
+  const hdrs = await headers()
+  // Fetch templates that are public or created by current user
+  const resp = await fetch(`${base}/api/workouts?mine=true&pageSize=12`, {
+    cache: 'no-store',
+    headers: {
+      cookie: hdrs.get('cookie') ?? '',
     },
-    {
-      id: 2,
-      name: "Leg Day Blast",
-      description: "Comprehensive lower body workout for power and size",
-      duration: 60,
-      exercises: 10,
-      difficulty: "Advanced",
-      calories: 450,
-      category: "Strength",
-    },
-    {
-      id: 3,
-      name: "HIIT Cardio",
-      description: "High-intensity intervals to burn fat and boost endurance",
-      duration: 30,
-      exercises: 6,
-      difficulty: "Intermediate",
-      calories: 400,
-      category: "Cardio",
-    },
-    {
-      id: 4,
-      name: "Core & Abs",
-      description: "Targeted core workout for a strong, defined midsection",
-      duration: 25,
-      exercises: 8,
-      difficulty: "Beginner",
-      calories: 200,
-      category: "Core",
-    },
-    {
-      id: 5,
-      name: "Full Body Circuit",
-      description: "Complete workout hitting all major muscle groups",
-      duration: 50,
-      exercises: 12,
-      difficulty: "Intermediate",
-      calories: 500,
-      category: "Full Body",
-    },
-    {
-      id: 6,
-      name: "Yoga Flow",
-      description: "Flexibility and mindfulness practice for recovery",
-      duration: 40,
-      exercises: 15,
-      difficulty: "Beginner",
-      calories: 150,
-      category: "Flexibility",
-    },
-  ]
+  })
+  const data = resp.ok ? await resp.json() : { items: [] }
+  const workoutTemplates = Array.isArray(data?.items) ? data.items : []
 
   const recentWorkouts = [
     { date: "Today", name: "Upper Body Strength", duration: 45, calories: 350 },
@@ -192,20 +149,20 @@ export default function WorkoutsPage() {
         <div>
           <h2 className="text-2xl font-bold mb-4">Workout Templates</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {workoutTemplates.map((workout) => (
+            {workoutTemplates.length === 0 ? (
+              <Card className="col-span-full">
+                <CardContent className="p-6 text-sm text-muted-foreground">
+                  No templates found yet.
+                </CardContent>
+              </Card>
+            ) : workoutTemplates.map((workout: any) => (
               <Card key={workout.id} className="hover:border-primary/50 transition-colors">
-                <CardHeader>
+                <CardHeader className="border-b">
                   <div className="flex items-start justify-between mb-2">
-                    <Badge variant="secondary">{workout.category}</Badge>
+                    <Badge variant="secondary">Template</Badge>
                     <Badge
                       variant="outline"
-                      className={
-                        workout.difficulty === "Beginner"
-                          ? "border-secondary text-secondary"
-                          : workout.difficulty === "Intermediate"
-                            ? "border-accent text-accent"
-                            : "border-primary text-primary"
-                      }
+                      className={workout.difficulty === 'BEGINNER' ? 'border-secondary text-secondary' : workout.difficulty === 'INTERMEDIATE' ? 'border-accent text-accent' : 'border-primary text-primary'}
                     >
                       {workout.difficulty}
                     </Badge>
@@ -213,24 +170,23 @@ export default function WorkoutsPage() {
                   <CardTitle className="text-xl">{workout.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{workout.description}</p>
+                  {workout.description && (
+                    <p className="text-sm text-muted-foreground">{workout.description}</p>
+                  )}
 
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-4 h-4" />
-                      <span>{workout.duration} min</span>
+                      <span>{workout.estimatedTime ?? 0} min</span>
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Dumbbell className="w-4 h-4" />
-                      <span>{workout.exercises} exercises</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Flame className="w-4 h-4" />
-                      <span>{workout.calories} cal</span>
+                      <span>{workout._count?.exercises ?? 0} exercises</span>
                     </div>
                   </div>
-
-                  <div className="flex gap-2">
+                </CardContent>
+                <CardFooter className="border-t">
+                  <div className="flex gap-2 w-full">
                     <Button className="flex-1" asChild>
                       <Link href={`/workouts/${workout.id}/start`}>Start Workout</Link>
                     </Button>
@@ -238,7 +194,7 @@ export default function WorkoutsPage() {
                       <Link href={`/workouts/${workout.id}`}>Details</Link>
                     </Button>
                   </div>
-                </CardContent>
+                </CardFooter>
               </Card>
             ))}
           </div>

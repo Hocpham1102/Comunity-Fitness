@@ -4,9 +4,9 @@ import { revalidateTag } from 'next/cache'
 import { updateWorkoutSchema } from '@/lib/shared/schemas/workout.schema'
 import { deleteWorkout, getWorkoutById, updateWorkout } from '@/lib/server/services/workouts.service'
 
-export async function GET(_request: NextRequest, context: { params: { id: string } }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = context.params
+    const { id } = await context.params
     const session = await auth()
     const user = session?.user ? { id: session.user.id, role: session.user.role } : undefined
 
@@ -21,9 +21,9 @@ export async function GET(_request: NextRequest, context: { params: { id: string
   }
 }
 
-export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = context.params
+    const { id } = await context.params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
@@ -51,9 +51,9 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
   }
 }
 
-export async function DELETE(_request: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = context.params
+    const { id } = await context.params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
