@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { verifySession, getSessionOrNull } from '@/lib/server/auth/session'
 import { revalidateTag } from 'next/cache'
 import { updateWorkoutSchema } from '@/lib/shared/schemas/workout.schema'
 import { deleteWorkout, getWorkoutById, updateWorkout } from '@/lib/server/services/workouts.service'
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    
     const { id } = await context.params
-    const session = await auth()
+    const session = await getSessionOrNull()
     const user = session?.user ? { id: session.user.id, role: session.user.role } : undefined
 
     const workout = await getWorkoutById(id, user)
@@ -24,15 +25,12 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = await verifySession()
 
     const body = await request.json()
     const parsed = updateWorkoutSchema.parse({ ...body, id })
 
-    const updated = await updateWorkout(id, parsed, { id: session.user.id, role: session.user.role })
+    const updated = await updateWorkout(id, parsed, { id: user.id, role: user.role })
     if (!updated) {
       // Avoid disclosing existence
       return NextResponse.json({ message: 'Not found' }, { status: 404 })
@@ -54,12 +52,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = await verifySession()
 
-    const ok = await deleteWorkout(id, { id: session.user.id, role: session.user.role })
+    const ok = await deleteWorkout(id, { id: user.id, role: user.role })
     if (!ok) {
       return NextResponse.json({ message: 'Not found' }, { status: 404 })
     }

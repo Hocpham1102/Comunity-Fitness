@@ -1,4 +1,4 @@
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,14 +14,23 @@ async function getBaseUrl() {
 
 async function fetchWorkout(id: string) {
   const base = process.env.NEXT_PUBLIC_APP_URL || (await getBaseUrl())
-  const res = await fetch(`${base}/api/workouts/${id}`, { cache: 'no-store' })
+  const cookieHeader = (await cookies()).toString()
+  const res = await fetch(`${base}/api/workouts/${id}`, {
+    cache: 'no-store',
+    headers: { cookie: cookieHeader },
+    credentials: 'include',
+  })
   if (!res.ok) return null
   return res.json()
 }
 
 async function fetchTemplates() {
   const base = process.env.NEXT_PUBLIC_APP_URL || (await getBaseUrl())
-  const res = await fetch(`${base}/api/workouts?mine=true&pageSize=12`, { cache: 'no-store' })
+  const cookieHeader = (await cookies()).toString()
+  const res = await fetch(`${base}/api/workouts?mine=true&pageSize=12`, {
+    cache: 'no-store',
+    headers: { cookie: cookieHeader },
+  })
   if (!res.ok) return { items: [] }
   return res.json()
 }

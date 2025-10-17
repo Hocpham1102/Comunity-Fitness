@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { verifySession, getSessionOrNull } from '@/lib/server/auth/session'
 import { revalidateTag } from 'next/cache'
 import { createWorkoutSchema } from '@/lib/shared/schemas/workout.schema'
 import { BadRequestError, createWorkout, listWorkouts } from '@/lib/server/services/workouts.service'
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const isPublic = searchParams.get('isPublic') === 'true'
     const mine = searchParams.get('mine') === 'true'
 
-    const session = await auth()
+    const session = await getSessionOrNull()
     const user = session?.user ? { id: session.user.id, role: session.user.role } : undefined
 
     const result = await listWorkouts({ page, pageSize, isPublic, mine }, user)
@@ -25,15 +25,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = await verifySession()
 
     const body = await request.json()
     const data = createWorkoutSchema.parse(body)
 
-    const workout = await createWorkout(session.user.id, data)
+    const workout = await createWorkout(user.id, data)
 
     revalidateTag('workouts')
     revalidateTag(`workout:${workout?.id}`)
