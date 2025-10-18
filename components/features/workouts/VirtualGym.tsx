@@ -45,7 +45,7 @@ interface WorkoutLog {
 }
 
 interface VirtualGymProps {
-  workoutLog: WorkoutLog
+  readonly workoutLog: WorkoutLog
 }
 
 export default function VirtualGym({ workoutLog }: VirtualGymProps) {
@@ -226,7 +226,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         {/* Center: Video and Exercise Info */}
         <div className="flex-1 flex flex-col">
           {/* Video Player */}
-          <div className="p-4">
+          <div className="p-4 pb-0 lg:pb-4">
             <VideoPlayer
               videoUrl={currentExercise.exercise.videoUrl}
               thumbnailUrl={currentExercise.exercise.thumbnailUrl}
@@ -284,7 +284,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         </div>
       </div>
 
-      {/* Mobile: Exercise Navigation */}
+      {/* Mobile: Exercise Navigation with Set Logger (collapsible bottom panel) */}
       <div className="lg:hidden">
         <ExerciseList
           exercises={workoutLog.workout.exercises}
@@ -292,11 +292,18 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
           onSelectExercise={handleSelectExercise}
           completedExercises={completedExercises}
           isMobile={true}
+          currentSet={currentSetNumber}
+          totalSets={currentExercise.sets}
+          targetReps={currentExercise.reps}
+          onCompleteSet={handleSetComplete}
+          previousWeight={getPreviousSetData().weight}
+          previousReps={getPreviousSetData().reps}
+          isResting={isResting}
         />
       </div>
 
-      {/* Mobile/Tablet: Set Logger */}
-      <div className="lg:hidden p-4">
+      {/* Desktop/Tablet: Set Logger */}
+      <div className="hidden lg:block p-4">
         <SetLogger
           currentSet={currentSetNumber}
           totalSets={currentExercise.sets}
