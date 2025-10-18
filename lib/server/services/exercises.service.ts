@@ -1,114 +1,113 @@
 import { db } from '@/lib/server/db/prisma'
+import { MuscleGroup, EquipmentType, DifficultyLevel } from '@prisma/client'
 
-export interface ListExercisesParams {
+export interface ExerciseSearchParams {
+  q?: string
+  muscleGroups?: MuscleGroup[]
+  equipment?: EquipmentType[]
+  difficulty?: DifficultyLevel
   page?: number
   pageSize?: number
-  query?: string
-  muscleGroups?: string[]
-  equipment?: string[]
-  difficulty?: string
 }
 
-export interface AuthUser {
+export interface ExerciseSearchResult {
   id: string
-  role?: string
-}
-
-export async function createExercise(_user: AuthUser, data: {
   name: string
-  description?: string
-  instructions?: string
-  muscleGroups: string[]
-  equipment: string[]
-  difficulty: string
-  videoUrl?: string | null
-  thumbnailUrl?: string | null
-  isPublic?: boolean
-}) {
-  const created = await db.exercise.create({
-    data: {
-      name: data.name,
-      description: data.description,
-      instructions: data.instructions,
-      muscleGroups: data.muscleGroups,
-      equipment: data.equipment,
-      difficulty: data.difficulty as any,
-      videoUrl: data.videoUrl || null,
-      thumbnailUrl: data.thumbnailUrl || null,
-      isPublic: data.isPublic ?? true,
-    },
-  })
-  return created
+  description: string | null
+  muscleGroups: MuscleGroup[]
+  equipment: EquipmentType[]
+  difficulty: DifficultyLevel
+  videoUrl: string | null
+  thumbnailUrl: string | null
 }
 
-export async function listExercises(params: ListExercisesParams) {
-  const page = Math.max(1, params.page ?? 1)
-  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20))
+export async function searchExercises(params: ExerciseSearchParams) {
+  const {
+    q,
+    muscleGroups = [],
+    equipment = [],
+    difficulty,
+    page = 1,
+    pageSize = 20,
+  } = params
+
   const skip = (page - 1) * pageSize
 
-  const where: any = {}
-  if (params.query) {
-    where.name = { contains: params.query, mode: 'insensitive' }
-  }
-  if (params.muscleGroups && params.muscleGroups.length > 0) {
-    where.muscleGroups = { hasSome: params.muscleGroups }
-  }
-  if (params.equipment && params.equipment.length > 0) {
-    where.equipment = { hasSome: params.equipment }
-  }
-  if (params.difficulty) {
-    where.difficulty = params.difficulty as any
+  const where: any = {
+    isPublic: true,
   }
 
-  const [items, total] = await Promise.all([
+  // Text search
+  if (q) {
+    where.name = {
+      contains: q,
+      mode: 'insensitive',
+    }
+  }
+
+  // Muscle groups filter
+  if (muscleGroups.length > 0) {
+    where.muscleGroups = {
+      hasSome: muscleGroups,
+    }
+  }
+
+  // Equipment filter
+  if (equipment.length > 0) {
+    where.equipment = {
+      hasSome: equipment,
+    }
+  }
+
+  // Difficulty filter
+  if (difficulty) {
+    where.difficulty = difficulty
+  }
+
+  const [exercises, total] = await Promise.all([
     db.exercise.findMany({
       where,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        muscleGroups: true,
+        equipment: true,
+        difficulty: true,
+        videoUrl: true,
+        thumbnailUrl: true,
+      },
       skip,
       take: pageSize,
-      orderBy: { name: 'asc' },
+      orderBy: {
+        name: 'asc',
+      },
     }),
     db.exercise.count({ where }),
   ])
 
-  return { items, total, page, pageSize }
+  return {
+    items: exercises,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  }
 }
 
 export async function getExerciseById(id: string) {
-  return db.exercise.findUnique({ where: { id } })
-}
-
-export async function updateExercise(_id: string, _user: AuthUser, data: {
-  id: string
-  name?: string
-  description?: string | null
-  instructions?: string | null
-  muscleGroups?: string[]
-  equipment?: string[]
-  difficulty?: string
-  videoUrl?: string | null
-  thumbnailUrl?: string | null
-  isPublic?: boolean
-}) {
-  const updated = await db.exercise.update({
-    where: { id: data.id },
-    data: {
-      name: data.name,
-      description: data.description,
-      instructions: data.instructions,
-      muscleGroups: data.muscleGroups,
-      equipment: data.equipment,
-      difficulty: (data.difficulty as any) ?? undefined,
-      videoUrl: data.videoUrl,
-      thumbnailUrl: data.thumbnailUrl,
-      isPublic: data.isPublic,
+  return db.exercise.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      instructions: true,
+      muscleGroups: true,
+      equipment: true,
+      difficulty: true,
+      videoUrl: true,
+      thumbnailUrl: true,
     },
   })
-  return updated
 }
-
-export async function deleteExercise(id: string, _user: AuthUser) {
-  await db.exercise.delete({ where: { id } })
-  return true
-}
-
-

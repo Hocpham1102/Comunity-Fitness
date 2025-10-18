@@ -11,11 +11,24 @@ export async function GET(request: NextRequest) {
     const pageSize = Number(searchParams.get('pageSize') ?? '20')
     const isPublic = searchParams.get('isPublic') === 'true'
     const mine = searchParams.get('mine') === 'true'
+    const q = searchParams.get('q') || undefined
+    const difficulty = searchParams.get('difficulty') || undefined
+    const estimatedTimeLte = searchParams.get('estimatedTimeLte') ? Number(searchParams.get('estimatedTimeLte')) : undefined
+    const isTemplate = searchParams.get('isTemplate') === 'true' ? true : searchParams.get('isTemplate') === 'false' ? false : undefined
 
     const session = await getSessionOrNull()
     const user = session?.user ? { id: session.user.id, role: session.user.role } : undefined
 
-    const result = await listWorkouts({ page, pageSize, isPublic, mine }, user)
+    const result = await listWorkouts({ 
+      page, 
+      pageSize, 
+      isPublic, 
+      mine, 
+      q, 
+      difficulty, 
+      estimatedTimeLte, 
+      isTemplate 
+    }, user)
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
     console.error('List workouts error:', error)

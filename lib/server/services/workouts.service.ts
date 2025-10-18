@@ -13,6 +13,10 @@ export interface ListWorkoutsParams {
   pageSize?: number
   isPublic?: boolean
   mine?: boolean
+  q?: string
+  difficulty?: string
+  estimatedTimeLte?: number
+  isTemplate?: boolean
 }
 
 export interface AuthUser {
@@ -86,6 +90,31 @@ export async function listWorkouts(params: ListWorkoutsParams, user?: AuthUser) 
   const skip = (page - 1) * pageSize
 
   const where: any = {}
+
+  // Text search
+  if (params.q) {
+    where.name = {
+      contains: params.q,
+      mode: 'insensitive',
+    }
+  }
+
+  // Difficulty filter
+  if (params.difficulty) {
+    where.difficulty = params.difficulty
+  }
+
+  // Time filter
+  if (params.estimatedTimeLte) {
+    where.estimatedTime = {
+      lte: params.estimatedTimeLte,
+    }
+  }
+
+  // Template filter
+  if (params.isTemplate !== undefined) {
+    where.isTemplate = params.isTemplate
+  }
 
   if (params.isPublic === true) {
     where.isPublic = true

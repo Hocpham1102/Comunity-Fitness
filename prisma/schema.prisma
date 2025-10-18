@@ -290,6 +290,11 @@ model WorkoutLog {
   notes            String?       @db.Text
   duration         Int?          // total workout duration in minutes
   
+  // Progress tracking for active workouts
+  restUntil        DateTime?     // when rest timer ends
+  currentExerciseOrder Int?      // which exercise in the workout (0-based)
+  currentSetNumber Int?          // which set in current exercise (1-based)
+  
   exerciseLogs     ExerciseLog[]
   
   startedAt        DateTime

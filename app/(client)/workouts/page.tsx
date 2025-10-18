@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Dumbbell, Clock, Search, Plus, TrendingUp, Flame } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dumbbell, Clock, Search, Plus, TrendingUp, Flame, Filter } from "lucide-react"
 import Link from "next/link"
 import { headers } from "next/headers"
 
@@ -107,10 +108,53 @@ export default async function WorkoutsPage() {
           </Card>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input placeholder="Search workouts..." className="pl-10" />
+        {/* Search and Filters */}
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input placeholder="Search workouts..." className="pl-10" />
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BEGINNER">Beginner</SelectItem>
+                <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
+                <SelectItem value="ADVANCED">Advanced</SelectItem>
+                <SelectItem value="EXPERT">Expert</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Time" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">≤ 30 min</SelectItem>
+                <SelectItem value="45">≤ 45 min</SelectItem>
+                <SelectItem value="60">≤ 60 min</SelectItem>
+                <SelectItem value="90">≤ 90 min</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Templates</SelectItem>
+                <SelectItem value="false">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button variant="outline" size="sm">
+              <Filter className="w-4 h-4 mr-2" />
+              Clear Filters
+            </Button>
+          </div>
         </div>
 
         {/* Recent Workouts */}
@@ -120,9 +164,9 @@ export default async function WorkoutsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentWorkouts.map((workout, i) => (
+              {recentWorkouts.map((workout) => (
                 <div
-                  key={i}
+                  key={workout.name}
                   className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
@@ -162,7 +206,11 @@ export default async function WorkoutsPage() {
                     <Badge variant="secondary">Template</Badge>
                     <Badge
                       variant="outline"
-                      className={workout.difficulty === 'BEGINNER' ? 'border-secondary text-secondary' : workout.difficulty === 'INTERMEDIATE' ? 'border-accent text-accent' : 'border-primary text-primary'}
+                      className={(() => {
+                        if (workout.difficulty === 'BEGINNER') return 'border-secondary text-secondary'
+                        if (workout.difficulty === 'INTERMEDIATE') return 'border-accent text-accent'
+                        return 'border-primary text-primary'
+                      })()}
                     >
                       {workout.difficulty}
                     </Badge>
