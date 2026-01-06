@@ -14,9 +14,9 @@ export function PublicHeader() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <img 
-                src="/carrot-mascot.png" 
-                alt="Fitness Carrot" 
+              <img
+                src="/carrot-mascot.png"
+                alt="Fitness Carrot"
                 className="h-8 w-8"
               />
               <span className="text-xl font-bold text-orange-600">

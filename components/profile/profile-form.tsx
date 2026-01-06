@@ -2,60 +2,140 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import {
+  Activity,
   Calendar,
   Check,
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-  Phone,
+  Ruler,
   RotateCw,
-  Shield,
-  Trash2,
+  Target,
+  TrendingDown,
+  TrendingUp,
   User,
 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type FormData = {
-  fullName: string;
+// Fitness Profile Form Data Types
+type FitnessFormData = {
   dateOfBirth: string;
-  phone: string;
-  accountType: string;
-  email: string;
-  password: string;
+  gender: string;
+  height: string; // cm
+  currentWeight: string; // kg
+  targetWeight: string; // kg
+  activityLevel: string;
+  fitnessGoal: string;
 };
 
 type FormErrors = {
-  [key in keyof FormData]?: string | null;
+  [key in keyof FitnessFormData]?: string | null;
 };
 
-export default function ProfileForm() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "John Doe",
-    dateOfBirth: "1990-01-15",
-    phone: "+1 (555) 123-4567",
-    accountType: "premium",
-    email: "john@example.com",
-    password: "••••••••",
+type ProfileFormProps = {
+  initialData?: {
+    dateOfBirth?: Date | null;
+    gender?: string | null;
+    height?: number | null;
+    currentWeight?: number | null;
+    targetWeight?: number | null;
+    activityLevel?: string | null;
+    fitnessGoal?: string | null;
+    bmi?: number | null;
+    bmr?: number | null;
+    tdee?: number | null;
+  };
+};
+
+export default function ProfileForm({ initialData }: ProfileFormProps) {
+  // Helper function to format date for input
+  const formatDateForInput = (date: Date | null | undefined) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const router = useRouter();
+
+  const [formData, setFormData] = useState<FitnessFormData>({
+    dateOfBirth: formatDateForInput(initialData?.dateOfBirth),
+    gender: initialData?.gender || "",
+    height: initialData?.height?.toString() || "",
+    currentWeight: initialData?.currentWeight?.toString() || "",
+    targetWeight: initialData?.targetWeight?.toString() || "",
+    activityLevel: initialData?.activityLevel || "",
+    fitnessGoal: initialData?.fitnessGoal || "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-
-  // State để biết khi nào người dùng click vào ô input ngày sinh
   const [isDateInputFocused, setIsDateInputFocused] = useState(false);
 
+  // Calculated values
+  const [calculatedValues, setCalculatedValues] = useState({
+    bmi: initialData?.bmi || null,
+    bmr: initialData?.bmr || null,
+    tdee: initialData?.tdee || null,
+  });
+
+  // Calculate BMI, BMR, and TDEE
+  useEffect(() => {
+    const height = parseFloat(formData.height);
+    const weight = parseFloat(formData.currentWeight);
+    const birthDate = formData.dateOfBirth ? new Date(formData.dateOfBirth) : null;
+
+    if (height > 0 && weight > 0) {
+      // Calculate BMI (Body Mass Index)
+      // BMI = weight (kg) / (height (m))^2
+      const heightInMeters = height / 100;
+      const bmi = weight / (heightInMeters * heightInMeters);
+
+      // Calculate BMR (Basal Metabolic Rate) using Mifflin-St Jeor Equation
+      let bmr = 0;
+      if (birthDate && formData.gender) {
+        const age = Math.floor((new Date().getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+
+        if (formData.gender === 'MALE') {
+          // Men: BMR = 10 × weight(kg) + 6.25 × height(cm) - 5 × age(y) + 5
+          bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        } else if (formData.gender === 'FEMALE') {
+          // Women: BMR = 10 × weight(kg) + 6.25 × height(cm) - 5 × age(y) - 161
+          bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
+      }
+
+      // Calculate TDEE (Total Daily Energy Expenditure)
+      // TDEE = BMR × Activity Factor
+      let tdee = 0;
+      if (bmr > 0 && formData.activityLevel) {
+        const activityMultipliers: { [key: string]: number } = {
+          SEDENTARY: 1.2,           // Little or no exercise
+          LIGHTLY_ACTIVE: 1.375,    // Light exercise 1-3 days/week
+          MODERATELY_ACTIVE: 1.55,  // Moderate exercise 3-5 days/week
+          VERY_ACTIVE: 1.725,       // Hard exercise 6-7 days/week
+          EXTRA_ACTIVE: 1.9,        // Very hard exercise & physical job
+        };
+        tdee = bmr * (activityMultipliers[formData.activityLevel] || 1.2);
+      }
+
+      setCalculatedValues({
+        bmi: Math.round(bmi * 10) / 10,
+        bmr: Math.round(bmr),
+        tdee: Math.round(tdee),
+      });
+    } else {
+      setCalculatedValues({ bmi: null, bmr: null, tdee: null });
+    }
+  }, [formData.height, formData.currentWeight, formData.dateOfBirth, formData.gender, formData.activityLevel]);
+
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setSuccessMessage(null); // --- MỚI ---: Ẩn thông báo thành công khi bắt đầu sửa
+    setSuccessMessage(null);
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
@@ -64,158 +144,123 @@ export default function ProfileForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({}); // Xóa hết lỗi cũ trước khi kiểm tra
-    setSuccessMessage(null); // --- MỚI ---: Xóa thông báo cũ khi submit
-    setIsSubmitting(true); // --- MỚI ---: Bắt đầu loading
+    setErrors({});
+    setSuccessMessage(null);
+    setIsSubmitting(true);
     const newErrors: FormErrors = {};
 
-    // 1. Định nghĩa các trường bắt buộc
-    const requiredFields: (keyof FormData)[] = ["email", "password"];
-
-    // Kiểm tra từng trường
-    requiredFields.forEach((field) => {
-      const value = formData[field];
-      if (!value || value.trim() === "") {
-        newErrors[field] = "This field is required";
-      }
-    });
-
-    //Xử lý fullName (ví dụ)
-    if (formData.fullName && !newErrors.fullName) {
-      // Regex này cho phép chữ (kể cả Unicode/tiếng Việt), space, apostrophe, hyphen
-      const nameRegex = /^[\p{L}\s'-]+$/u;
-
-      if (formData.fullName.trim().length < 3) {
-        newErrors.fullName = "Full Name must be at least 3 characters";
-      } else if (formData.fullName.length > 100) {
-        newErrors.fullName = "Full Name cannot exceed 100 characters";
-      } else if (!nameRegex.test(formData.fullName)) {
-        newErrors.fullName =
-          "Name contains invalid characters (no numbers or symbols)";
-      }
-    }
-    //Xử lý email đặc biệt (ví dụ)
-    if (formData.email) {
-      // Regex này hỗ trợ Unicode (quốc tế) và yêu cầu TLD (đuôi) phải có ít nhất 2 ký tự
-      const emailRegex = /^[\p{L}0-9._%+-]+@[\p{L}0-9.-]+\.[\p{L}]{2,}$/u;
-
-      if (!emailRegex.test(formData.email)) {
-        newErrors.email =
-          "Please enter a valid email format (e.g., user@domain.com)";
-      }
-    }
-
-    //Xử lý phone (ví dụ)
-    if (formData.phone) {
-      // Regex 1: Tìm bất kỳ ký tự nào KHÔNG PHẢI là số, +, (, ), -, hoặc khoảng trắng
-      const phoneRegexInvalidChars = /[^0-9+()\-\s]/;
-
-      if (phoneRegexInvalidChars.test(formData.phone)) {
-        // Lỗi 1: SĐT có chứa ký tự không hợp lệ (như chữ cái, @, #, ...)
-        newErrors.phone = "Phone number contains invalid characters";
-      } else {
-        // Lỗi 2: Nếu ký tự hợp lệ, kiểm tra số lượng chữ số
-        // Lột bỏ tất cả ký tự không phải là số (D = non-digit) và đếm
-        const digitCount = formData.phone.replace(/\D/g, "").length;
-
-        if (digitCount < 9 || digitCount > 15) {
-          // Hầu hết SĐT quốc tế có từ 9 (VD: VN) đến 15 (VD: Đức) chữ số
-          newErrors.phone = "Phone number must have between 9 and 15 digits";
-        }
-      }
-    }
-    //Xử lý dateOfBirth (ví dụ)
+    // Validate Date of Birth
     if (formData.dateOfBirth) {
       const today = new Date();
       const birthDate = new Date(formData.dateOfBirth);
-
-      // Đặt giờ về 0 để chỉ so sánh ngày
       today.setHours(0, 0, 0, 0);
 
       if (birthDate > today) {
         newErrors.dateOfBirth = "Date of Birth cannot be in the future";
       } else {
-        // (Tùy chọn) Kiểm tra 13 tuổi
         const minAgeDate = new Date();
         minAgeDate.setFullYear(minAgeDate.getFullYear() - 13);
         if (birthDate > minAgeDate) {
-          // newErrors.dateOfBirth đã được check ở trên,
-          // nên chỉ set lỗi này nếu lỗi "future" không xảy ra
           newErrors.dateOfBirth = "You must be at least 13 years old";
         }
       }
     }
-    //Xử lý password (ví dụ)
-    if (formData.password && formData.password !== "••••••••") {
-      const password = formData.password;
-      const hasNumber = /\d/;
-      const hasUpperCase = /[A-Z]/;
-      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
 
-      if (password.length < 8) {
-        newErrors.password = "Password must be at least 8 characters";
-      } else if (!hasNumber.test(password)) {
-        newErrors.password = "Password must contain at least one number";
-      } else if (!hasUpperCase.test(password)) {
-        newErrors.password =
-          "Password must contain at least one uppercase letter";
-      } else if (!hasSpecialChar.test(password)) {
-        newErrors.password =
-          "Password must contain at least one special character (e.g., !@#$%)";
+    // Validate Height
+    if (formData.height) {
+      const height = parseFloat(formData.height);
+      if (isNaN(height) || height < 50 || height > 300) {
+        newErrors.height = "Height must be between 50-300 cm";
       }
     }
 
-    //Nếu có lỗi, cập nhật state lỗi và dừng lại
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setIsSubmitting(false); // --- MỚI ---: Dừng loading nếu có lỗi
-      return; // Không cho submit
+    // Validate Current Weight
+    if (formData.currentWeight) {
+      const weight = parseFloat(formData.currentWeight);
+      if (isNaN(weight) || weight < 20 || weight > 500) {
+        newErrors.currentWeight = "Weight must be between 20-500 kg";
+      }
     }
 
-    //Nếu không có lỗi
-    console.log("Form is valid. Submitting:", formData);
-    setTimeout(() => {
-      setIsSubmitting(false); // --- MỚI ---: Dừng loading sau khi "API" hoàn tất
-      setSuccessMessage("Update complete!"); // --- MỚI ---: Hiển thị thông báo
+    // Validate Target Weight
+    if (formData.targetWeight) {
+      const weight = parseFloat(formData.targetWeight);
+      if (isNaN(weight) || weight < 20 || weight > 500) {
+        newErrors.targetWeight = "Target weight must be between 20-500 kg";
+      }
+    }
 
-      // --- MỚI ---: Tự động ẩn thông báo sau 3 giây
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dateOfBirth: formData.dateOfBirth || null,
+          gender: formData.gender || null,
+          height: formData.height ? parseFloat(formData.height) : null,
+          currentWeight: formData.currentWeight ? parseFloat(formData.currentWeight) : null,
+          targetWeight: formData.targetWeight ? parseFloat(formData.targetWeight) : null,
+          activityLevel: formData.activityLevel || null,
+          fitnessGoal: formData.fitnessGoal || null,
+          bmi: calculatedValues.bmi,
+          bmr: calculatedValues.bmr,
+          tdee: calculatedValues.tdee,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        setSuccessMessage(data.message || 'Update failed. Please try again.');
+        return;
+      }
+
+      setIsSubmitting(false);
+      setSuccessMessage(data.message || "Profile updated successfully!");
+
+      // Refresh the page to load updated data from server
+      router.refresh();
+
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-    }, 1000); // Giả lập API delay
+    } catch (error) {
+      console.error('Profile update error:', error);
+      setIsSubmitting(false);
+      setSuccessMessage('Network error. Please check your connection and try again.');
+
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    }
   };
 
-  const dateInputType =
-    formData.dateOfBirth || isDateInputFocused ? "date" : "text";
+  const dateInputType = formData.dateOfBirth || isDateInputFocused ? "date" : "text";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Information Note */}
+      <div className="bg-muted/50 p-4 rounded-lg border border-border">
+        <h3 className="font-semibold text-sm mb-2">Fitness Profile Information</h3>
+        <p className="text-xs text-muted-foreground">
+          This information helps calculate BMI, BMR, TDEE and provides a suitable workout plan for you.
+        </p>
+      </div>
+
       {/* Form Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Full Name */}
-        <div>
-          <div className="relative">
-            <Input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Vui lòng nhập Full Name"
-              data-invalid={!!errors.fullName}
-              className="w-full data-[invalid=true]:border-destructive pl-10"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <User className="w-4 h-4" />
-            </span>
-          </div>
-          {errors.fullName && (
-            <p className="text-sm text-destructive mt-1">{errors.fullName}</p>
-          )}
-        </div>
-
-        {/* Date of Birth */}
+        {/* Date of Birth - Ngày sinh */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
             Date of Birth
@@ -225,7 +270,7 @@ export default function ProfileForm() {
               type={dateInputType}
               name="dateOfBirth"
               value={formData.dateOfBirth}
-              placeholder="--/--/----" // Giữ placeholder đặc biệt này
+              placeholder="--/--/----"
               onChange={handleChange}
               onFocus={() => setIsDateInputFocused(true)}
               onBlur={() => setIsDateInputFocused(false)}
@@ -236,121 +281,211 @@ export default function ProfileForm() {
               <Calendar className="w-4 h-4" />
             </span>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">Used to calculate age and BMR</p>
           {errors.dateOfBirth && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.dateOfBirth}
-            </p>
-          )}
-        </div>
-        {/* Phone */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Phone
-          </label>
-          <div className="relative">
-            <Input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Vui lòng nhập Phone"
-              data-invalid={!!errors.phone}
-              className="w-full data-[invalid=true]:border-destructive pl-10"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <Phone className="w-4 h-4" />
-            </span>
-          </div>
-          {errors.phone && (
-            <p className="text-sm text-destructive mt-1">{errors.phone}</p>
+            <p className="text-sm text-destructive mt-1">{errors.dateOfBirth}</p>
           )}
         </div>
 
-        {/* Account Type */}
+        {/* Gender - Giới tính */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
-            Account Type
+            Gender
           </label>
           <div className="relative">
             <select
-              name="accountType"
-              value={formData.accountType}
+              name="gender"
+              value={formData.gender}
               onChange={handleChange}
-              data-invalid={!!errors.accountType}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed data-[invalid=true]:border-destructive pl-10"
+              data-invalid={!!errors.gender}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground data-[invalid=true]:border-destructive pl-10"
             >
-              <option value="free">Free</option>
-              <option value="premium">Premium</option>
-              <option value="pro">Pro</option>
+              <option value="">Select gender</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+              <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
             </select>
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <Shield className="w-4 h-4" />
+              <User className="w-4 h-4" />
             </span>
           </div>
-          {errors.accountType && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.accountType}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground mt-1">Affects BMR calculation formula</p>
         </div>
 
-        {/* Email */}
+        {/* Height - Chiều cao */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
-            Email*
+            Height (cm)
           </label>
           <div className="relative">
             <Input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="number"
+              name="height"
+              value={formData.height}
               onChange={handleChange}
-              placeholder="Vui lòng nhập Email"
-              data-invalid={!!errors.email}
+              placeholder="170"
+              step="0.1"
+              data-invalid={!!errors.height}
               className="w-full data-[invalid=true]:border-destructive pl-10"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <Mail className="w-4 h-4" />
+              <Ruler className="w-4 h-4" />
             </span>
           </div>
-          {errors.email && (
-            <p className="text-sm text-destructive mt-1">{errors.email}</p>
+          <p className="text-xs text-muted-foreground mt-1">Unit: cm (e.g., 170)</p>
+          {errors.height && (
+            <p className="text-sm text-destructive mt-1">{errors.height}</p>
           )}
         </div>
 
-        {/* Password */}
+        {/* Current Weight - Cân nặng hiện tại */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
-            Password*
+            Current Weight (kg)
           </label>
           <div className="relative">
             <Input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
+              type="number"
+              name="currentWeight"
+              value={formData.currentWeight}
               onChange={handleChange}
-              placeholder="Vui lòng nhập Password"
-              data-invalid={!!errors.password}
-              className="w-full data-[invalid=true]:border-destructive pl-10 pr-10"
+              placeholder="70"
+              step="0.1"
+              data-invalid={!!errors.currentWeight}
+              className="w-full data-[invalid=true]:border-destructive pl-10"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              <Lock className="w-4 h-4" />
+              <TrendingUp className="w-4 h-4" />
             </span>
-            <button
-              type="button" // Quan trọng: để không submit form
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
           </div>
-          {errors.password && (
-            <p className="text-sm text-destructive mt-1">{errors.password}</p>
+          <p className="text-xs text-muted-foreground mt-1">Unit: kg (e.g., 70)</p>
+          {errors.currentWeight && (
+            <p className="text-sm text-destructive mt-1">{errors.currentWeight}</p>
           )}
+        </div>
+
+        {/* Target Weight - Cân nặng mục tiêu */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Target Weight (kg)
+          </label>
+          <div className="relative">
+            <Input
+              type="number"
+              name="targetWeight"
+              value={formData.targetWeight}
+              onChange={handleChange}
+              placeholder="65"
+              step="0.1"
+              data-invalid={!!errors.targetWeight}
+              className="w-full data-[invalid=true]:border-destructive pl-10"
+            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <TrendingDown className="w-4 h-4" />
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Your target weight goal</p>
+          {errors.targetWeight && (
+            <p className="text-sm text-destructive mt-1">{errors.targetWeight}</p>
+          )}
+        </div>
+
+        {/* Activity Level - Mức độ hoạt động */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Activity Level
+          </label>
+          <div className="relative">
+            <select
+              name="activityLevel"
+              value={formData.activityLevel}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground pl-10"
+            >
+              <option value="">Select activity level</option>
+              <option value="SEDENTARY">Sedentary (Little or no exercise)</option>
+              <option value="LIGHTLY_ACTIVE">Lightly Active (1-3 days/week)</option>
+              <option value="MODERATELY_ACTIVE">Moderately Active (3-5 days/week)</option>
+              <option value="VERY_ACTIVE">Very Active (6-7 days/week)</option>
+              <option value="EXTRA_ACTIVE">Extra Active (Very hard exercise + physical job)</option>
+            </select>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <Activity className="w-4 h-4" />
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Used to calculate TDEE (daily calorie expenditure)</p>
+        </div>
+
+        {/* Fitness Goal - Mục tiêu thể chất */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Fitness Goal
+          </label>
+          <div className="relative">
+            <select
+              name="fitnessGoal"
+              value={formData.fitnessGoal}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground pl-10"
+            >
+              <option value="">Select fitness goal</option>
+              <option value="LOSE_WEIGHT">Lose Weight</option>
+              <option value="GAIN_MUSCLE">Gain Muscle</option>
+              <option value="MAINTAIN_WEIGHT">Maintain Weight</option>
+              <option value="IMPROVE_ENDURANCE">Improve Endurance</option>
+              <option value="GENERAL_FITNESS">General Fitness</option>
+            </select>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <Target className="w-4 h-4" />
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Your fitness goal</p>
+        </div>
+      </div>
+
+      {/* Calculated Values - Read Only */}
+      <div className="border-t border-border pt-6">
+        <h3 className="font-semibold text-sm mb-4">Calculated Health Metrics</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* BMI */}
+          <div className="bg-muted/30 p-4 rounded-lg">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              BMI (Body Mass Index)
+            </label>
+            <p className="text-2xl font-bold text-foreground">
+              {calculatedValues.bmi ? calculatedValues.bmi.toFixed(1) : '--'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Body Mass Index (weight/height²)
+            </p>
+          </div>
+
+          {/* BMR */}
+          <div className="bg-muted/30 p-4 rounded-lg">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              BMR (Basal Metabolic Rate)
+            </label>
+            <p className="text-2xl font-bold text-foreground">
+              {calculatedValues.bmr ? `${calculatedValues.bmr} kcal` : '--'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Basic calories your body needs daily
+            </p>
+          </div>
+
+          {/* TDEE */}
+          <div className="bg-muted/30 p-4 rounded-lg">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              TDEE (Total Daily Energy Expenditure)
+            </label>
+            <p className="text-2xl font-bold text-foreground">
+              {calculatedValues.tdee ? `${calculatedValues.tdee} kcal` : '--'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total daily calorie expenditure
+            </p>
+          </div>
         </div>
       </div>
 
@@ -367,10 +502,9 @@ export default function ProfileForm() {
             ) : (
               <RotateCw className="w-4 h-4" />
             )}
-            {isSubmitting ? "Updating..." : "Update"}
+            {isSubmitting ? "Updating..." : "Update Profile"}
           </Button>
 
-          {/* --- ĐÃ DI CHUYỂN: Thông báo thành công nằm ngay dưới nút Update --- */}
           {successMessage && (
             <div className="flex items-center gap-2 text-sm text-green-600 mt-3">
               <Check className="w-4 h-4" />
@@ -378,19 +512,6 @@ export default function ProfileForm() {
             </div>
           )}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="gap-2 text-destructive hover:text-destructive bg-transparent"
-          onClick={() => {
-            // Đặt logic xử lý xóa của bạn ở đây
-            // Ví dụ: handleDelete(formData.id);
-          }}
-          disabled={isSubmitting}
-        >
-          <Trash2 className="w-4 h-4" />
-          Delete
-        </Button>
       </div>
     </form>
   );

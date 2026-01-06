@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Bell, Menu, X, Settings, LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import Link from 'next/link'
 
 interface DashboardNavProps {
   sidebarOpen: boolean
@@ -68,9 +69,11 @@ export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: Dashboar
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()}>

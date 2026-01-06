@@ -1,9 +1,9 @@
 import type { NextAuthConfig } from 'next-auth'
+import { db } from '@/lib/server/db/prisma'
 
 export const authConfig = {
   pages: {
     signIn: '/login',
-    signUp: '/register',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
@@ -38,10 +38,34 @@ export const authConfig = {
 
       return true
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub
-        session.user.role = token.role as string
+
+        // Fetch fresh user data from database to sync name, email, role
+        // NOTE: We DON'T sync image here because base64 images are too large for cookies
+        // Components will fetch avatar separately via API
+        try {
+          const user = await db.user.findUnique({
+            where: { id: token.sub },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          })
+
+          if (user) {
+            session.user.name = user.name
+            session.user.email = user.email
+            session.user.role = user.role as string
+          }
+        } catch (error) {
+          console.error('Error fetching user in session callback:', error)
+          // Fallback to token data if database query fails
+          session.user.role = token.role as string
+        }
       }
       return session
     },

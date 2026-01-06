@@ -3,6 +3,8 @@
 import { User, RotateCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 // --- MỚI: Import thư viện crop ---
 import ReactCrop, {
@@ -36,6 +38,9 @@ const modalContentStyle: React.CSSProperties = {
 };
 
 export default function ProfileInfo() {
+  const router = useRouter();
+  const { data: session } = useSession();
+
   // State cho avatarUrl (ảnh đã cắt, hoàn thiện)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -48,16 +53,40 @@ export default function ProfileInfo() {
   const [crop, setCrop] = useState<Crop>();
   // Ref trỏ tới thẻ <img> trong trình cắt ảnh
   const imgRef = useRef<HTMLImageElement>(null);
+  // State cho loading khi upload
+  const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Dọn dẹp Object URL (giữ nguyên)
+  // Load avatar từ API khi component mount
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.image) {
+            setAvatarUrl(data.image);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching avatar:', error);
+      }
+    };
+
+    if (session?.user?.id) {
+      fetchAvatar();
+    }
+  }, [session?.user?.id]);
+
+  // Dọn dẹp Object URL (chỉ dọn rawImageUrl, không dọn avatarUrl vì nó từ server)
   useEffect(() => {
     return () => {
-      if (avatarUrl) URL.revokeObjectURL(avatarUrl);
-      if (rawImageUrl) URL.revokeObjectURL(rawImageUrl);
+      if (rawImageUrl && rawImageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(rawImageUrl);
+      }
     };
-  }, [avatarUrl, rawImageUrl]);
+  }, [rawImageUrl]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -67,11 +96,11 @@ export default function ProfileInfo() {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Dọn dẹp URL cũ (nếu có)
-      if (avatarUrl) URL.revokeObjectURL(avatarUrl);
-      if (rawImageUrl) URL.revokeObjectURL(rawImageUrl);
+      // Dọn dẹp rawImageUrl cũ (nếu có và là blob URL)
+      if (rawImageUrl && rawImageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(rawImageUrl);
+      }
 
-      setAvatarUrl(null); // Xóa avatar cũ
       const newRawUrl = URL.createObjectURL(file);
       setRawImageUrl(newRawUrl); // Lưu ảnh gốc
       setIsCropModalOpen(true); // Mở modal
@@ -80,12 +109,30 @@ export default function ProfileInfo() {
   };
 
   // --- SỬA ĐỔI: Xử lý khi nhấn "Delete" ---
-  const handleDeleteClick = () => {
-    if (avatarUrl) URL.revokeObjectURL(avatarUrl);
-    if (rawImageUrl) URL.revokeObjectURL(rawImageUrl);
-    setAvatarUrl(null);
-    setRawImageUrl(null);
-    setCrop(undefined);
+  const handleDeleteClick = async () => {
+    if (!avatarUrl) return;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/profile/avatar', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete avatar');
+      }
+
+      // Xóa avatar khỏi state
+      setAvatarUrl(null);
+
+      // Refresh trang để cập nhật session
+      router.refresh();
+    } catch (error) {
+      console.error('Error deleting avatar:', error);
+      alert('Không thể xóa avatar. Vui lòng thử lại.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // --- MỚI: Hàm được gọi khi ảnh trong modal đã tải xong ---
@@ -109,9 +156,8 @@ export default function ProfileInfo() {
     setCrop(crop);
   }
 
-  // --- MỚI: Hàm xác nhận cắt ảnh ---
   // --- MỚI: Hàm xác nhận cắt ảnh (ĐÃ SỬA LỖI) ---
-  const handleConfirmCrop = () => {
+  const handleConfirmCrop = async () => {
     const img = imgRef.current;
 
     // Thêm kiểm tra kỹ hơn, đảm bảo crop và img đã sẵn sàng
@@ -159,13 +205,42 @@ export default function ProfileInfo() {
     // Chuyển canvas thành Data URL (ảnh mới)
     const newCroppedAvatarUrl = canvas.toDataURL("image/png");
 
-    // Dọn dẹp ảnh gốc và đóng modal
-    if (rawImageUrl) URL.revokeObjectURL(rawImageUrl);
-    setRawImageUrl(null);
+    // Đóng modal và dọn dẹp
     setIsCropModalOpen(false);
+    if (rawImageUrl && rawImageUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(rawImageUrl);
+    }
+    setRawImageUrl(null);
 
-    // Set avatar mới
-    setAvatarUrl(newCroppedAvatarUrl);
+    // Upload avatar lên server
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/profile/avatar', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: newCroppedAvatarUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to upload avatar');
+      }
+
+      // Set avatar mới vào state
+      setAvatarUrl(newCroppedAvatarUrl);
+
+      // Refresh trang để cập nhật session
+      router.refresh();
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Không thể upload avatar. Vui lòng thử lại.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -186,24 +261,25 @@ export default function ProfileInfo() {
           </div>
 
           <div className="flex gap-2">
-            {/* Nút Upload (giữ nguyên) */}
+            {/* Nút Upload */}
             <Button
               variant="outline"
               size="sm"
               className="gap-2 bg-transparent"
               onClick={handleUploadClick}
+              disabled={isUploading}
             >
-              <RotateCw className="w-4 h-4" />
-              Upload
+              <RotateCw className={`w-4 h-4 ${isUploading ? 'animate-spin' : ''}`} />
+              {isUploading ? 'Uploading...' : 'Upload'}
             </Button>
 
-            {/* Nút Delete (logic disabled thay đổi) */}
+            {/* Nút Delete */}
             <Button
               variant="outline"
               size="sm"
               className="gap-2 text-destructive hover:text-destructive bg-transparent"
               onClick={handleDeleteClick}
-              disabled={!avatarUrl && !rawImageUrl} // Vô hiệu hóa nếu k có ảnh
+              disabled={!avatarUrl || isUploading}
             >
               <Trash2 className="w-4 h-4" />
               Delete
