@@ -33,6 +33,9 @@ export interface WorkoutStats {
   totalVolume: number // kg
   averageSessionDuration: number
   lastWorkoutDate?: Date
+  thisMonthSessions?: number
+  thisMonthDuration?: number
+  percentageChange?: number
 }
 
 export async function createWorkoutLog(userId: string, data: CreateWorkoutLogData) {
@@ -176,6 +179,37 @@ export async function completeWorkout(logId: string, user: AuthUser) {
   })
 }
 
+export async function getWorkoutLogById(logId: string, user: AuthUser) {
+  const log = await db.workoutLog.findUnique({
+    where: { id: logId },
+    include: {
+      workout: {
+        select: { id: true, name: true, difficulty: true, description: true },
+      },
+      exerciseLogs: {
+        include: {
+          exercise: {
+            select: { id: true, name: true, muscleGroups: true, equipment: true },
+          },
+          sets: {
+            orderBy: { setNumber: 'asc' },
+          },
+        },
+      },
+    },
+  })
+
+  if (!log) {
+    throw new Error('Workout log not found')
+  }
+
+  if (log.userId !== user.id && user.role !== 'ADMIN') {
+    throw new Error('Access denied')
+  }
+
+  return log
+}
+
 export async function getWorkoutHistory(userId: string, page = 1, pageSize = 20) {
   const skip = (page - 1) * pageSize
 
@@ -230,6 +264,12 @@ export async function getExerciseHistory(userId: string, exerciseId: string) {
 }
 
 export async function computeWorkoutStats(userId: string): Promise<WorkoutStats> {
+  const now = new Date()
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+
+  // Fetch all completed workouts
   const logs = await db.workoutLog.findMany({
     where: {
       userId,
@@ -238,6 +278,7 @@ export async function computeWorkoutStats(userId: string): Promise<WorkoutStats>
     select: {
       duration: true,
       startedAt: true,
+      completedAt: true,
       exerciseLogs: {
         include: {
           sets: {
@@ -252,6 +293,17 @@ export async function computeWorkoutStats(userId: string): Promise<WorkoutStats>
     orderBy: { startedAt: 'desc' },
   })
 
+  // Filter for this month and last month
+  const thisMonthLogs = logs.filter(log =>
+    log.completedAt && new Date(log.completedAt) >= startOfThisMonth
+  )
+  const lastMonthLogs = logs.filter(log =>
+    log.completedAt &&
+    new Date(log.completedAt) >= startOfLastMonth &&
+    new Date(log.completedAt) <= endOfLastMonth
+  )
+
+  // Calculate totals
   const totalSessions = logs.length
   const totalDuration = logs.reduce((sum, log) => sum + (log.duration || 0), 0)
   const totalVolume = logs.reduce((sum, log) => {
@@ -262,11 +314,26 @@ export async function computeWorkoutStats(userId: string): Promise<WorkoutStats>
     }, 0)
   }, 0)
 
+  // Calculate this month stats
+  const thisMonthSessions = thisMonthLogs.length
+  const thisMonthDuration = thisMonthLogs.reduce((sum, log) => sum + (log.duration || 0), 0)
+
+  // Calculate last month stats
+  const lastMonthSessions = lastMonthLogs.length
+
+  // Calculate percentage change
+  const percentageChange = lastMonthSessions > 0
+    ? ((thisMonthSessions - lastMonthSessions) / lastMonthSessions) * 100
+    : thisMonthSessions > 0 ? 100 : 0
+
   return {
     totalSessions,
     totalDuration,
     totalVolume,
     averageSessionDuration: totalSessions > 0 ? totalDuration / totalSessions : 0,
     lastWorkoutDate: logs[0]?.startedAt,
+    thisMonthSessions,
+    thisMonthDuration,
+    percentageChange: Math.round(percentageChange),
   }
 }

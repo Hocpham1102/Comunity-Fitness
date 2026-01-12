@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import ProgressHeader from './ProgressHeader'
 import VideoPlayer from './VideoPlayer'
 import ExerciseList from './ExerciseList'
@@ -56,6 +57,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set())
   const [setData, setSetData] = useState<Record<string, { reps: number; weight: number }>>({})
+  const [isWorkoutComplete, setIsWorkoutComplete] = useState(false)
 
   const currentExercise = workoutLog.workout.exercises[currentExerciseIndex]
   const totalExercises = workoutLog.workout.exercises.length
@@ -66,7 +68,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
       const restUntil = new Date(workoutLog.restUntil)
       const now = new Date()
       const timeLeft = Math.max(0, Math.floor((restUntil.getTime() - now.getTime()) / 1000))
-      
+
       if (timeLeft > 0) {
         setRestTimeLeft(timeLeft)
         setIsResting(true)
@@ -119,7 +121,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
       if (currentSetNumber < currentExercise.sets) {
         const restSeconds = currentExercise.rest || 60
         const restUntil = new Date(Date.now() + restSeconds * 1000)
-        
+
         await fetch(`/api/workout-logs/${workoutLog.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -137,19 +139,17 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
       } else {
         // Exercise completed
         setCompletedExercises(prev => new Set([...prev, currentExerciseIndex]))
-        
+
         // Move to next exercise
         if (currentExerciseIndex < totalExercises - 1) {
           setCurrentExerciseIndex(prev => prev + 1)
           setCurrentSetNumber(1)
         } else {
           // Workout complete
-          toast.success('Workout completed! Great job!')
-          // Complete workout
-          await fetch(`/api/workout-logs/${workoutLog.id}/complete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          })
+          console.log('🎉 Workout complete - last set of last exercise!')
+          setCompletedExercises(prev => new Set([...prev, currentExerciseIndex]))
+          setIsWorkoutComplete(true)
+          toast.success('🎉 Workout completed! Great job!')
         }
       }
     } catch (error) {
@@ -185,9 +185,53 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
 
   const getPreviousSetData = () => {
     if (!currentExercise) return { weight: 0, reps: 0 }
-    
+
     const prevSetKey = `${currentExercise.exerciseId}-${currentSetNumber - 1}`
     return setData[prevSetKey] || { weight: 0, reps: 0 }
+  }
+
+  const handleFinishWorkout = async () => {
+    try {
+      const response = await fetch(`/api/workout-logs/${workoutLog.id}/complete`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) throw new Error('Failed to complete workout')
+
+      toast.success('Workout completed successfully!')
+      // Redirect to workouts page
+      window.location.href = '/workouts'
+    } catch (error) {
+      toast.error('Failed to complete workout')
+      console.error(error)
+    }
+  }
+
+  // Workout completion screen
+  if (isWorkoutComplete) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-green-900/20 to-black">
+        <div className="text-center space-y-6 p-8 max-w-md">
+          <div className="text-8xl mb-4 animate-bounce">🎉</div>
+          <h1 className="text-4xl font-bold text-white mb-2">Congratulations!</h1>
+          <p className="text-xl text-gray-300 mb-6">
+            You've completed all exercises!
+          </p>
+          <div className="space-y-3">
+            <Button
+              onClick={handleFinishWorkout}
+              className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6"
+              size="lg"
+            >
+              ✅ Finish Workout
+            </Button>
+            <p className="text-sm text-gray-400">
+              Your progress has been saved
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!currentExercise) {
@@ -208,7 +252,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         workoutName={workoutLog.title}
         currentExercise={currentExerciseIndex + 1}
         totalExercises={totalExercises}
-        onExit={() => {}}
+        onExit={() => { }}
       />
 
       {/* Main content */}
@@ -240,7 +284,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
               <h2 className="text-2xl font-bold text-white mb-2">
                 {currentExercise.exercise.name}
               </h2>
-              
+
               <div className="flex justify-center gap-2 mb-4">
                 <Badge variant="secondary" className="bg-blue-600/20 text-blue-400">
                   {currentExercise.exercise.difficulty}

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, ArrowRight, Save, Clock, Users, Target } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Save, Clock, Users, Target, FileText, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
@@ -24,21 +24,47 @@ const STEPS = [
   { id: 4, title: 'Review & Save', description: 'Final review and save' },
 ]
 
+const INITIAL_FORM_DATA: WorkoutFormData = {
+  name: '',
+  description: '',
+  difficulty: 'BEGINNER',
+  estimatedTime: 30,
+  exercises: [],
+  isTemplate: true,
+  isPublic: false,
+}
+
 export default function CreateWorkoutPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSaving, setIsSaving] = useState(false)
-  
-  const [formData, setFormData] = useState<WorkoutFormData>({
-    name: '',
-    description: '',
-    difficulty: 'BEGINNER',
-    estimatedTime: 30,
-    exercises: [],
-    isTemplate: true,
-    isPublic: false,
-  })
+  const [showDraftNotification, setShowDraftNotification] = useState(false)
+  const [draftData, setDraftData] = useState<{ formData: WorkoutFormData; step: number } | null>(null)
+
+  const [formData, setFormData] = useState<WorkoutFormData>(INITIAL_FORM_DATA)
+
+  // Load draft on mount
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem('workout-draft')
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft) as { formData: WorkoutFormData; step: number }
+        // Check if draft has meaningful data
+        if (parsed.formData && (parsed.formData.name || parsed.formData.exercises.length > 0)) {
+          setDraftData(parsed)
+          setShowDraftNotification(true)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load draft:', error)
+    }
+  }, [])
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep])
 
   const updateFormData = useCallback((updates: Partial<WorkoutFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
@@ -51,8 +77,12 @@ export default function CreateWorkoutPage() {
   }
 
   const prevStep = () => {
+    console.log('prevStep called, currentStep:', currentStep)
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
+      console.log('Moving to step:', currentStep - 1)
+    } else {
+      console.log('Already at step 1, cannot go back')
     }
   }
 
@@ -60,6 +90,8 @@ export default function CreateWorkoutPage() {
     setIsSaving(true)
     try {
       await apiCreateWorkout(formData as any)
+      // Clear draft after successful save
+      localStorage.removeItem('workout-draft')
       toast({
         title: 'Workout saved!',
         description: 'Your workout has been saved successfully.',
@@ -75,6 +107,27 @@ export default function CreateWorkoutPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleLoadDraft = () => {
+    if (draftData) {
+      setFormData(draftData.formData)
+      setCurrentStep(draftData.step)
+      setShowDraftNotification(false)
+      toast({
+        title: 'Draft loaded',
+        description: 'You can continue editing your workout.',
+      })
+    }
+  }
+
+  const handleStartFresh = () => {
+    setShowDraftNotification(false)
+    localStorage.removeItem('workout-draft')
+    toast({
+      title: 'Starting fresh',
+      description: 'Previous draft has been cleared.',
+    })
   }
 
   const renderStepContent = () => {
@@ -156,7 +209,7 @@ export default function CreateWorkoutPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Desktop: Save button */}
             <div className="hidden md:flex items-center gap-2">
               <Button
@@ -164,7 +217,7 @@ export default function CreateWorkoutPage() {
                 size="sm"
                 onClick={() => {
                   // Auto-save draft
-                  localStorage.setItem('workout-draft', JSON.stringify(formData))
+                  localStorage.setItem('workout-draft', JSON.stringify({ formData, step: currentStep }))
                   toast({
                     title: 'Draft saved',
                     description: 'Your progress has been saved locally.',
@@ -179,6 +232,57 @@ export default function CreateWorkoutPage() {
         </div>
       </div>
 
+      {/* Draft Notification Banner */}
+      {showDraftNotification && draftData && (
+        <div className="container mx-auto px-4 py-4">
+          <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                    Draft Found
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                    You have an unfinished workout: <strong>{draftData.formData.name || 'Untitled Workout'}</strong>
+                    {draftData.formData.exercises.length > 0 && (
+                      <span> • {draftData.formData.exercises.length} exercise{draftData.formData.exercises.length !== 1 ? 's' : ''}</span>
+                    )}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleLoadDraft}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Continue Editing
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleStartFresh}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900"
+                    >
+                      Start Fresh
+                    </Button>
+                  </div>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowDraftNotification(false)}
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Progress Sidebar - Desktop */}
@@ -191,22 +295,20 @@ export default function CreateWorkoutPage() {
                 {STEPS.map((step) => (
                   <div
                     key={step.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                      step.id === currentStep
-                        ? 'bg-primary/10 border border-primary/20'
-                        : step.id < currentStep
-                          ? 'bg-green-50 border border-green-200'
-                          : 'bg-muted/50'
-                    }`}
+                    className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${step.id === currentStep
+                      ? 'bg-primary/10 border border-primary/20'
+                      : step.id < currentStep
+                        ? 'bg-green-50 border border-green-200'
+                        : 'bg-muted/50'
+                      }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        step.id === currentStep
-                          ? 'bg-primary text-primary-foreground'
-                          : step.id < currentStep
-                            ? 'bg-green-500 text-white'
-                            : 'bg-muted text-muted-foreground'
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.id === currentStep
+                        ? 'bg-primary text-primary-foreground'
+                        : step.id < currentStep
+                          ? 'bg-green-500 text-white'
+                          : 'bg-muted text-muted-foreground'
+                        }`}
                     >
                       {step.id < currentStep ? '✓' : step.id}
                     </div>
@@ -263,9 +365,8 @@ export default function CreateWorkoutPage() {
                 {STEPS.map((step) => (
                   <div
                     key={step.id}
-                    className={`flex-1 h-2 rounded-full transition-colors ${
-                      step.id <= currentStep ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className={`flex-1 h-2 rounded-full transition-colors ${step.id <= currentStep ? 'bg-primary' : 'bg-muted'
+                      }`}
                   />
                 ))}
               </div>
@@ -284,19 +385,18 @@ export default function CreateWorkoutPage() {
                 variant="outline"
                 onClick={prevStep}
                 disabled={currentStep === 1}
-                className="md:hidden"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
               </Button>
 
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-3">
                 {/* Mobile: Save Draft */}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    localStorage.setItem('workout-draft', JSON.stringify(formData))
+                    localStorage.setItem('workout-draft', JSON.stringify({ formData, step: currentStep }))
                     toast({
                       title: 'Draft saved',
                       description: 'Your progress has been saved locally.',

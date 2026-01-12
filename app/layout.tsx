@@ -6,6 +6,7 @@ import { SessionProvider } from 'next-auth/react'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { NotificationsProvider } from '@/providers/notifications-provider'
+import { AvatarProvider } from '@/contexts/avatar-context'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -79,18 +80,20 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <NotificationsProvider>
-              {children}
-              <Toaster />
-              <Analytics />
-            </NotificationsProvider>
-          </ThemeProvider>
+          <AvatarProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <NotificationsProvider>
+                {children}
+                <Toaster />
+                <Analytics />
+              </NotificationsProvider>
+            </ThemeProvider>
+          </AvatarProvider>
         </SessionProvider>
       </body>
     </html>

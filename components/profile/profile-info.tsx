@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useAvatar } from "@/contexts/avatar-context";
 
 // --- MỚI: Import thư viện crop ---
 import ReactCrop, {
@@ -40,9 +41,7 @@ const modalContentStyle: React.CSSProperties = {
 export default function ProfileInfo() {
   const router = useRouter();
   const { data: session } = useSession();
-
-  // State cho avatarUrl (ảnh đã cắt, hoàn thiện)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { avatarUrl, updateAvatar, deleteAvatar } = useAvatar();
 
   // --- MỚI: State cho việc cắt ảnh ---
   // State chứa ảnh gốc (chưa cắt)
@@ -58,26 +57,7 @@ export default function ProfileInfo() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load avatar từ API khi component mount
-  useEffect(() => {
-    const fetchAvatar = async () => {
-      try {
-        const response = await fetch('/api/profile');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.image) {
-            setAvatarUrl(data.image);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching avatar:', error);
-      }
-    };
 
-    if (session?.user?.id) {
-      fetchAvatar();
-    }
-  }, [session?.user?.id]);
 
   // Dọn dẹp Object URL (chỉ dọn rawImageUrl, không dọn avatarUrl vì nó từ server)
   useEffect(() => {
@@ -122,8 +102,8 @@ export default function ProfileInfo() {
         throw new Error('Failed to delete avatar');
       }
 
-      // Xóa avatar khỏi state
-      setAvatarUrl(null);
+      // Delete avatar from context (triggers update in all components)
+      deleteAvatar();
 
       // Refresh trang để cập nhật session
       router.refresh();
@@ -230,8 +210,8 @@ export default function ProfileInfo() {
         throw new Error(data.message || 'Failed to upload avatar');
       }
 
-      // Set avatar mới vào state
-      setAvatarUrl(newCroppedAvatarUrl);
+      // Update avatar in context (triggers update in all components)
+      updateAvatar(newCroppedAvatarUrl);
 
       // Refresh trang để cập nhật session
       router.refresh();

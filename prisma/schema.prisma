@@ -20,6 +20,19 @@ enum Role {
   ADMIN
 }
 
+enum CourseCategory {
+  STRENGTH_TRAINING
+  CARDIO
+  YOGA
+  PILATES
+  HIIT
+  BODYBUILDING
+  WEIGHT_LOSS
+  FLEXIBILITY
+  SPORTS_SPECIFIC
+  GENERAL_FITNESS
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -71,6 +84,10 @@ model User {
   // Marketplace
   purchases        Purchase[]
   reviews          Review[]
+  
+  // Courses
+  createdCourses   Course[]
+  courseEnrollments CourseEnrollment[]
 
   @@index([email])
   @@index([role])
@@ -510,6 +527,57 @@ model TrainerClient {
   @@index([trainerId])
   @@index([clientId])
   @@index([status])
+}
+
+// ============================================
+// Courses & Training Programs
+// ============================================
+
+model Course {
+  id              String          @id @default(cuid())
+  trainerId       String
+  trainer         User            @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String          @db.Text
+  shortDescription String?
+  category        CourseCategory
+  
+  duration        Int?            // in weeks
+  difficulty      DifficultyLevel @default(BEGINNER)
+  
+  price           Float
+  currency        String          @default("USD")
+  
+  thumbnailUrl    String?
+  previewVideoUrl String?
+  
+  isPublished     Boolean         @default(false)
+  
+  enrollments     CourseEnrollment[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([trainerId])
+  @@index([isPublished])
+  @@index([category])
+}
+
+model CourseEnrollment {
+  id              String   @id @default(cuid())
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  enrolledAt      DateTime @default(now())
+  completedAt     DateTime?
+  progress        Float    @default(0) // 0-100%
+  
+  @@unique([courseId, userId])
+  @@index([userId])
+  @@index([courseId])
 }
 
 // ============================================

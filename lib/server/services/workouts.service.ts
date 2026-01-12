@@ -24,7 +24,11 @@ export interface AuthUser {
   role?: string
 }
 
-export async function createWorkout(userId: string, data: CreateWorkoutData) {
+export async function createWorkout(userId: string, data: CreateWorkoutData, userRole?: string) {
+  // Auto-set isTemplate based on user role
+  // Only admins can create templates, regular users create custom workouts
+  const isTemplate = userRole === 'ADMIN'
+
   const created = await db.$transaction(async (tx) => {
     const workout = await tx.workout.create({
       data: {
@@ -32,7 +36,7 @@ export async function createWorkout(userId: string, data: CreateWorkoutData) {
         description: data.description,
         difficulty: data.difficulty,
         estimatedTime: data.estimatedTime,
-        isTemplate: data.isTemplate,
+        isTemplate, // Use computed value instead of client data
         isPublic: data.isPublic,
         createdById: userId,
       },
@@ -169,6 +173,13 @@ export async function updateWorkout(id: string, data: UpdateWorkoutData, user: A
 
   const isOwner = existing.createdById === user.id
   const isAdmin = user.role === 'ADMIN'
+
+  // Protection: Only admins can edit templates
+  if (existing.isTemplate && !isAdmin) {
+    return null // Non-admin users cannot edit templates
+  }
+
+  // Regular authorization: must be owner or admin
   if (!isOwner && !isAdmin) return null
 
   const updated = await db.$transaction(async (tx) => {
@@ -179,7 +190,8 @@ export async function updateWorkout(id: string, data: UpdateWorkoutData, user: A
         description: data.description ?? existing.description ?? undefined,
         difficulty: data.difficulty ?? existing.difficulty,
         estimatedTime: data.estimatedTime ?? existing.estimatedTime ?? undefined,
-        isTemplate: data.isTemplate ?? existing.isTemplate,
+        // Don't allow changing isTemplate after creation
+        isTemplate: existing.isTemplate,
         isPublic: data.isPublic ?? existing.isPublic,
       },
     })

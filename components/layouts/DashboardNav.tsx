@@ -10,8 +10,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Bell, Menu, X, Settings, LogOut } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useAvatar } from '@/contexts/avatar-context'
 
 interface DashboardNavProps {
   sidebarOpen: boolean
@@ -20,6 +21,25 @@ interface DashboardNavProps {
 }
 
 export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: DashboardNavProps) {
+  const { data: session } = useSession()
+  const { avatarUrl } = useAvatar()
+
+  // Generate initials from name or email
+  const getInitials = () => {
+    if (session?.user?.name) {
+      return session.user.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    }
+    if (session?.user?.email) {
+      return session.user.email.slice(0, 2).toUpperCase()
+    }
+    return 'U'
+  }
+
   return (
     <header className="border-b bg-card sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 py-3 lg:px-8 lg:py-4">
@@ -54,17 +74,17 @@ export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: Dashboar
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                  <AvatarFallback>AC</AvatarFallback>
+                  <AvatarImage src={avatarUrl || undefined} alt={session?.user?.name || 'User'} />
+                  <AvatarFallback>{getInitials()}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">Alex Chen</p>
+                  <p className="font-medium">{session?.user?.name || 'User'}</p>
                   <p className="w-[200px] truncate text-sm text-muted-foreground">
-                    alex@example.com
+                    {session?.user?.email || ''}
                   </p>
                 </div>
               </div>
@@ -76,7 +96,7 @@ export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: Dashboar
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()}>
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

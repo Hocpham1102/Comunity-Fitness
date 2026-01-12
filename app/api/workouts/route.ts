@@ -19,15 +19,15 @@ export async function GET(request: NextRequest) {
     const session = await getSessionOrNull()
     const user = session?.user ? { id: session.user.id, role: session.user.role } : undefined
 
-    const result = await listWorkouts({ 
-      page, 
-      pageSize, 
-      isPublic, 
-      mine, 
-      q, 
-      difficulty, 
-      estimatedTimeLte, 
-      isTemplate 
+    const result = await listWorkouts({
+      page,
+      pageSize,
+      isPublic,
+      mine,
+      q,
+      difficulty,
+      estimatedTimeLte,
+      isTemplate
     }, user)
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createWorkoutSchema.parse(body)
 
-    const workout = await createWorkout(user.id, data)
+    const workout = await createWorkout(user.id, data, user.role)
 
     revalidateTag('workouts')
     revalidateTag(`workout:${workout?.id}`)

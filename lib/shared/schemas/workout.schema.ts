@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Enums matching the Prisma schema
 export const MuscleGroupEnum = z.enum([
   'CHEST',
-  'BACK', 
+  'BACK',
   'SHOULDERS',
   'BICEPS',
   'TRICEPS',
@@ -32,7 +32,7 @@ export const EquipmentTypeEnum = z.enum([
 
 export const DifficultyLevelEnum = z.enum([
   'BEGINNER',
-  'INTERMEDIATE', 
+  'INTERMEDIATE',
   'ADVANCED',
   'EXPERT',
 ])
@@ -75,7 +75,7 @@ export const workoutBasicsSchema = z.object({
   name: z.string()
     .min(1, 'Workout name is required')
     .max(100, 'Name too long')
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Name contains invalid characters'),
+    .regex(/^[\p{L}\p{N}\s\-_.,!()]+$/u, 'Name contains invalid characters'),
   description: z.string()
     .max(1000, 'Description too long')
     .optional(),
@@ -94,7 +94,7 @@ export const workoutSchema = z.object({
   name: z.string()
     .min(1, 'Workout name is required')
     .max(100, 'Name too long')
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Name contains invalid characters'),
+    .regex(/^[\p{L}\p{N}\s\-_.,!()]+$/u, 'Name contains invalid characters'),
   description: z.string()
     .max(1000, 'Description too long')
     .optional(),
@@ -103,12 +103,12 @@ export const workoutSchema = z.object({
     .int()
     .min(1, 'Time must be at least 1 minute')
     .max(300, 'Time cannot exceed 5 hours'),
-  
+
   // Exercises
   exercises: z.array(workoutExerciseConfigSchema)
     .min(1, 'At least one exercise is required')
     .max(50, 'Too many exercises'),
-  
+
   // Metadata
   isTemplate: z.boolean().default(true),
   isPublic: z.boolean().default(false),

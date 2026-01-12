@@ -1,5 +1,4 @@
 import type { NextAuthConfig } from 'next-auth'
-import { db } from '@/lib/server/db/prisma'
 
 export const authConfig = {
   pages: {
@@ -10,16 +9,25 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard')
       const isOnAdmin = nextUrl.pathname.startsWith('/admin')
-      const isOnTrainer = nextUrl.pathname.startsWith('/trainer')
+      const isOnSettings = nextUrl.pathname.startsWith('/settings')
+      const isOnProfile = nextUrl.pathname.startsWith('/profile')
+      const isOnWorkouts = nextUrl.pathname.startsWith('/workouts')
+      const isOnNutrition = nextUrl.pathname.startsWith('/nutrition')
+      const isOnProgress = nextUrl.pathname.startsWith('/progress')
+      const isOnTrainer = nextUrl.pathname === '/trainer' || nextUrl.pathname.startsWith('/trainer/')
       const isOnPublic = nextUrl.pathname.startsWith('/') && !nextUrl.pathname.startsWith('/api')
 
-      // Allow public routes
-      if (isOnPublic && !isOnDashboard && !isOnAdmin && !isOnTrainer) {
+      // Protected routes that require authentication
+      const isProtectedRoute = isOnDashboard || isOnSettings || isOnProfile ||
+        isOnWorkouts || isOnNutrition || isOnProgress
+
+      // Allow public routes (including /trainers directory)
+      if (isOnPublic && !isProtectedRoute && !isOnAdmin && !isOnTrainer) {
         return true
       }
 
-      // Dashboard routes require authentication
-      if (isOnDashboard) {
+      // Protected routes require authentication
+      if (isProtectedRoute) {
         if (isLoggedIn) return true
         return false // Redirect to login
       }
@@ -41,37 +49,19 @@ export const authConfig = {
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub
-
-        // Fetch fresh user data from database to sync name, email, role
-        // NOTE: We DON'T sync image here because base64 images are too large for cookies
-        // Components will fetch avatar separately via API
-        try {
-          const user = await db.user.findUnique({
-            where: { id: token.sub },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-            },
-          })
-
-          if (user) {
-            session.user.name = user.name
-            session.user.email = user.email
-            session.user.role = user.role as string
-          }
-        } catch (error) {
-          console.error('Error fetching user in session callback:', error)
-          // Fallback to token data if database query fails
-          session.user.role = token.role as string
-        }
+        // Sync user data from JWT token (populated during login)
+        session.user.name = token.name as string | null
+        session.user.email = token.email as string
+        session.user.role = token.role as string
       }
       return session
     },
     jwt({ token, user }) {
       if (user) {
+        // Store user data in JWT token during login
         token.role = (user as any).role
+        token.name = user.name
+        token.email = user.email
       }
       return token
     },

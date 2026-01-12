@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,7 +22,7 @@ const navigation = [
   { name: 'Nutrition', href: '/nutrition', icon: Apple },
   { name: 'Progress', href: '/progress', icon: BarChart3 },
   { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Trainer', href: '/trainer', icon: Users },
+  { name: 'Trainers', href: '/trainers', icon: Users },
 ]
 
 interface DashboardSidebarProps {
@@ -32,6 +33,43 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ sidebarOpen, setSidebarOpen, isMobile }: DashboardSidebarProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  // Load avatar from API
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      try {
+        const response = await fetch('/api/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setAvatarUrl(data.image)
+        }
+      } catch (error) {
+        console.error('Error fetching avatar:', error)
+      }
+    }
+
+    if (session?.user?.id) {
+      fetchAvatar()
+    }
+  }, [session?.user?.id])
+
+  // Generate initials from name or email
+  const getInitials = () => {
+    if (session?.user?.name) {
+      return session.user.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    }
+    if (session?.user?.email) {
+      return session.user.email.slice(0, 2).toUpperCase()
+    }
+    return 'U'
+  }
 
   // Handle Escape key to close sidebar on mobile
   useEffect(() => {
@@ -40,7 +78,7 @@ export function DashboardSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Dash
         setSidebarOpen(false)
       }
     }
-    
+
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
   }, [sidebarOpen, isMobile, setSidebarOpen])
@@ -73,8 +111,8 @@ export function DashboardSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Dash
               <span className="font-bold text-xl">Fitness Carrot</span>
             </Link>
             {/* Close button - mobile only */}
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden"
@@ -108,15 +146,21 @@ export function DashboardSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Dash
 
           {/* User Profile */}
           <div className="p-4 border-t">
-            <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-primary-foreground">AC</span>
+            <Link href="/profile" onClick={() => isMobile && setSidebarOpen(false)}>
+              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-sm font-medium text-primary-foreground">{getInitials()}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{session?.user?.name || 'User'}</div>
+                  <div className="text-sm text-muted-foreground truncate">{session?.user?.email || ''}</div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">Alex Chen</div>
-                <div className="text-sm text-muted-foreground truncate">alex@example.com</div>
-              </div>
-            </div>
+            </Link>
           </div>
         </div>
       </aside>

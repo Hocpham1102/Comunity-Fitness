@@ -52,6 +52,7 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
   const [currentSetNumber, setCurrentSetNumber] = useState(workoutLog.currentSetNumber || 1)
   const [restTimeLeft, setRestTimeLeft] = useState(0)
   const [isResting, setIsResting] = useState(false)
+  const [isWorkoutComplete, setIsWorkoutComplete] = useState(false)
   const [setData, setSetData] = useState<Record<string, { reps: number; weight: number }>>({})
 
   const currentExercise = workoutLog.workout.exercises[currentExerciseIndex]
@@ -64,7 +65,7 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
       const restUntil = new Date(workoutLog.restUntil)
       const now = new Date()
       const timeLeft = Math.max(0, Math.floor((restUntil.getTime() - now.getTime()) / 1000))
-      
+
       if (timeLeft > 0) {
         setRestTimeLeft(timeLeft)
         setIsResting(true)
@@ -102,8 +103,27 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
     const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
     const data = setData[setKey] || { reps: 0, weight: 0 }
 
+    // Validate weight - must be positive (not negative or zero)
+    if (!data.weight || data.weight <= 0) {
+      toast.warning('Vui lòng nhập trọng lượng hợp lệ (phải lớn hơn 0 kg)')
+      return
+    }
+
+    // Validate reps - must be positive
+    if (!data.reps || data.reps < 1) {
+      toast.warning('Vui lòng nhập số lần lặp hợp lệ (phải lớn hơn 0)')
+      return
+    }
+
+    console.log('=== handleSetComplete START ===')
+    console.log('Current exercise:', currentExercise.exercise.name)
+    console.log('Current set:', currentSetNumber, '/', currentExercise.sets)
+    console.log('Current exercise index:', currentExerciseIndex, '/', totalExercises - 1)
+    console.log('Set data:', data)
+
     try {
       // Submit set data
+      console.log('Submitting set data...')
       const response = await fetch(`/api/workout-logs/${workoutLog.id}/sets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,13 +136,22 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to log set')
+      if (!response.ok) {
+        console.error('Set submission failed:', response.status, response.statusText)
+        throw new Error('Failed to log set')
+      }
+
+      console.log('Set submitted successfully!')
+
+      // Show success feedback for set completion
+      toast.success(`Set ${currentSetNumber} completed!`)
 
       // Start rest timer if there are more sets
       if (currentSetNumber < currentExercise.sets) {
+        console.log('More sets remaining, starting rest timer...')
         const restSeconds = currentExercise.rest || 60
         const restUntil = new Date(Date.now() + restSeconds * 1000)
-        
+
         await fetch(`/api/workout-logs/${workoutLog.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -137,16 +166,47 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
         setRestTimeLeft(restSeconds)
         setIsResting(true)
       } else {
-        // Move to next exercise
+        console.log('Last set of exercise completed!')
+        // Last set of current exercise completed
         if (currentExerciseIndex < totalExercises - 1) {
+          console.log('Moving to next exercise...')
+          // Move to next exercise
+          toast.success(`${currentExercise.exercise.name} completed! Moving to next exercise...`)
+
+          await fetch(`/api/workout-logs/${workoutLog.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              currentExerciseOrder: currentExerciseIndex + 1,
+              currentSetNumber: 1,
+              restUntil: null,
+            }),
+          })
+
           setCurrentExerciseIndex(prev => prev + 1)
           setCurrentSetNumber(1)
         } else {
-          // Workout complete
-          toast.success('Workout completed! Great job!')
+          console.log('🎉 LAST SET OF LAST EXERCISE - WORKOUT COMPLETE!')
+          // Last set of last exercise - workout complete!
+          await fetch(`/api/workout-logs/${workoutLog.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              currentExerciseOrder: currentExerciseIndex,
+              currentSetNumber: currentExercise.sets,
+              restUntil: null,
+            }),
+          })
+
+          console.log('Setting isWorkoutComplete to true...')
+          setIsWorkoutComplete(true)
+          toast.success('🎉 Workout completed! Great job!')
+          console.log('Workout completion state set!')
         }
       }
+      console.log('=== handleSetComplete END ===')
     } catch (error) {
+      console.error('Error in handleSetComplete:', error)
       toast.error('Failed to log set')
       console.error(error)
     }
@@ -168,6 +228,23 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
     if (currentExerciseIndex < totalExercises - 1) {
       setCurrentExerciseIndex(prev => prev + 1)
       setCurrentSetNumber(1)
+    }
+  }
+
+  const handleFinishWorkout = async () => {
+    try {
+      const response = await fetch(`/api/workout-logs/${workoutLog.id}/complete`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) throw new Error('Failed to complete workout')
+
+      toast.success('Workout completed successfully!')
+      // Redirect to workouts page
+      window.location.href = '/workouts'
+    } catch (error) {
+      toast.error('Failed to complete workout')
+      console.error(error)
     }
   }
 
@@ -242,27 +319,37 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
               <Input
                 type="number"
                 placeholder="0"
+                step="0.5"
                 value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight || ''}
                 onChange={(e) => {
+                  const value = parseFloat(e.target.value)
                   const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
                   setSetData(prev => ({
                     ...prev,
-                    [setKey]: { ...prev[setKey], weight: Number(e.target.value) }
+                    [setKey]: { ...prev[setKey], weight: isNaN(value) ? 0 : value }
                   }))
                 }}
+                className={(
+                  setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight <= 0 ||
+                  !setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight
+                ) ? 'border-red-500' : ''}
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Reps</label>
+              <label className="text-sm font-medium">Reps Completed</label>
               <Input
                 type="number"
                 placeholder="0"
+                min="1"
+                step="1"
                 value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.reps || ''}
                 onChange={(e) => {
+                  const value = parseInt(e.target.value, 10)
+                  if (value < 1 || isNaN(value)) return
                   const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
                   setSetData(prev => ({
                     ...prev,
-                    [setKey]: { ...prev[setKey], reps: Number(e.target.value) }
+                    [setKey]: { ...prev[setKey], reps: value }
                   }))
                 }}
               />
@@ -270,34 +357,55 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button
-              onClick={handlePreviousExercise}
-              variant="outline"
-              disabled={currentExerciseIndex === 0}
-            >
-              <SkipBack className="w-4 h-4 mr-2" />
-              Previous
-            </Button>
-            
-            <Button
-              onClick={handleSetComplete}
-              className="flex-1"
-              disabled={isResting}
-            >
-              <Check className="w-4 h-4 mr-2" />
-              Complete Set
-            </Button>
-            
-            <Button
-              onClick={handleNextExercise}
-              variant="outline"
-              disabled={currentExerciseIndex === totalExercises - 1}
-            >
-              Next
-              <SkipForward className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+          {isWorkoutComplete ? (
+            <div className="text-center space-y-4">
+              <div className="p-6 bg-green-50 dark:bg-green-950/20 rounded-lg border-2 border-green-200 dark:border-green-800">
+                <h3 className="text-xl font-bold text-green-700 dark:text-green-400 mb-2">
+                  🎉 Congratulations!
+                </h3>
+                <p className="text-green-600 dark:text-green-500 mb-4">
+                  You've completed all exercises!
+                </p>
+                <Button
+                  onClick={handleFinishWorkout}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  size="lg"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  Finish Workout
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-4">
+              <Button
+                onClick={handlePreviousExercise}
+                variant="outline"
+                disabled={currentExerciseIndex === 0}
+              >
+                <SkipBack className="w-4 h-4 mr-2" />
+                Previous
+              </Button>
+
+              <Button
+                onClick={handleSetComplete}
+                className="flex-1"
+                disabled={isResting}
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Complete Set
+              </Button>
+
+              <Button
+                onClick={handleNextExercise}
+                variant="outline"
+                disabled={currentExerciseIndex === totalExercises - 1}
+              >
+                Next
+                <SkipForward className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
