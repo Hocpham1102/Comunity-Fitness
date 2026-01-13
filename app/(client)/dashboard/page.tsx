@@ -1,6 +1,33 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { auth } from '@/auth'
+import { getNutritionStats } from '@/lib/server/services/nutrition-logs.service'
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth()
+
+  // Fetch today's nutrition stats
+  let nutritionStats = {
+    totalCalories: 0,
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFats: 0,
+  }
+
+  if (session?.user?.id) {
+    try {
+      nutritionStats = await getNutritionStats(session.user.id)
+    } catch (error) {
+      console.error('Error fetching nutrition stats:', error)
+    }
+  }
+
+  const nutritionGoals = {
+    calories: 2200,
+    protein: 165,
+    carbs: 275,
+    fats: 73,
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -113,19 +140,19 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Calories</span>
-                <span className="text-sm">1,847 / 2,200</span>
+                <span className="text-sm">{nutritionStats.totalCalories.toFixed(0)} / {nutritionGoals.calories}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Protein</span>
-                <span className="text-sm">142g / 165g</span>
+                <span className="text-sm">{nutritionStats.totalProtein.toFixed(0)}g / {nutritionGoals.protein}g</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Carbs</span>
-                <span className="text-sm">180g / 275g</span>
+                <span className="text-sm">{nutritionStats.totalCarbs.toFixed(0)}g / {nutritionGoals.carbs}g</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Fats</span>
-                <span className="text-sm">65g / 73g</span>
+                <span className="text-sm">{nutritionStats.totalFats.toFixed(0)}g / {nutritionGoals.fats}g</span>
               </div>
             </div>
           </CardContent>
