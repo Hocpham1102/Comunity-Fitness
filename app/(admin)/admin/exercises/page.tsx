@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,7 +48,7 @@ interface ExercisesResponse {
     totalPages: number
 }
 
-export default function AdminExercisesPage() {
+function AdminExercisesContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const [data, setData] = useState<ExercisesResponse | null>(null)
@@ -222,5 +222,13 @@ export default function AdminExercisesPage() {
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+export default function AdminExercisesPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <AdminExercisesContent />
+        </Suspense>
     )
 }
