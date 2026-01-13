@@ -1,42 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { headers } from 'next/headers'
 import { Users, Dumbbell, Activity, UtensilsCrossed } from 'lucide-react'
+import { getAdminStats } from '@/lib/server/services/admin.service'
 
-async function getBaseUrl() {
-  const hdrs = await headers()
-  const host = hdrs.get('host')
-  const proto = hdrs.get('x-forwarded-proto') ?? 'http'
-  return `${proto}://${host}`
-}
-
-async function fetchStats() {
-  try {
-    const base = process.env.NEXT_PUBLIC_APP_URL || (await getBaseUrl())
-    const hdrs = await headers()
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
-
-    const res = await fetch(`${base}/api/admin/stats`, {
-      cache: 'no-store',
-      headers: {
-        cookie: hdrs.get('cookie') ?? '',
-      },
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeoutId)
-
-    if (!res.ok) return null
-    return res.json()
-  } catch (error) {
-    console.error('Failed to fetch stats:', error)
-    return null
-  }
-}
+export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboardPage() {
-  const stats = await fetchStats()
+  const stats = await getAdminStats()
 
   return (
     <div className="space-y-6">
