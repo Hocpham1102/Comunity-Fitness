@@ -95,6 +95,36 @@ export async function searchExercises(params: ExerciseSearchParams) {
   }
 }
 
+export interface CreateExerciseData {
+  name: string
+  description?: string | null
+  instructions?: string | null
+  muscleGroups: MuscleGroup[]
+  equipment: EquipmentType[]
+  difficulty: DifficultyLevel
+  videoUrl?: string | null
+  thumbnailUrl?: string | null
+}
+
+export async function createExercise(data: CreateExerciseData) {
+  return db.exercise.create({
+    data,
+  })
+}
+
+export async function updateExercise(id: string, data: Partial<CreateExerciseData>) {
+  return db.exercise.update({
+    where: { id },
+    data,
+  })
+}
+
+export async function deleteExercise(id: string) {
+  return db.exercise.delete({
+    where: { id },
+  })
+}
+
 export async function getExerciseById(id: string) {
   return db.exercise.findUnique({
     where: { id },

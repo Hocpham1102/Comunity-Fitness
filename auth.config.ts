@@ -7,6 +7,7 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
+      const isAdmin = auth?.user?.role === 'ADMIN'
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard')
       const isOnAdmin = nextUrl.pathname.startsWith('/admin')
       const isOnSettings = nextUrl.pathname.startsWith('/settings')
@@ -16,6 +17,20 @@ export const authConfig = {
       const isOnProgress = nextUrl.pathname.startsWith('/progress')
       const isOnTrainer = nextUrl.pathname === '/trainer' || nextUrl.pathname.startsWith('/trainer/')
       const isOnPublic = nextUrl.pathname.startsWith('/') && !nextUrl.pathname.startsWith('/api')
+      const isOnLogin = nextUrl.pathname === '/login'
+
+      // Redirect admins from login to /admin
+      if (isOnLogin && isLoggedIn && isAdmin) {
+        return Response.redirect(new URL('/admin', nextUrl))
+      }
+
+      // Redirect regular users from login to /dashboard
+      if (isOnLogin && isLoggedIn && !isAdmin) {
+        return Response.redirect(new URL('/dashboard', nextUrl))
+      }
+
+      // Note: Admins can now access both /admin and regular user routes
+      // This allows admins to test and use the platform as a regular user would
 
       // Protected routes that require authentication
       const isProtectedRoute = isOnDashboard || isOnSettings || isOnProfile ||
@@ -34,13 +49,15 @@ export const authConfig = {
 
       // Admin routes require admin role
       if (isOnAdmin) {
-        if (isLoggedIn && auth?.user?.role === 'ADMIN') return true
-        return false // Redirect to dashboard
+        if (isLoggedIn && isAdmin) return true
+        // Redirect non-admins to dashboard
+        if (isLoggedIn) return Response.redirect(new URL('/dashboard', nextUrl))
+        return false // Redirect to login
       }
 
       // Trainer routes require trainer or admin role
       if (isOnTrainer) {
-        if (isLoggedIn && (auth?.user?.role === 'TRAINER' || auth?.user?.role === 'ADMIN')) return true
+        if (isLoggedIn && (auth?.user?.role === 'TRAINER' || isAdmin)) return true
         return false // Redirect to dashboard
       }
 

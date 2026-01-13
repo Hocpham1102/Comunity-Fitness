@@ -79,7 +79,8 @@ export function WorkoutBasicsForm({ data, onUpdate }: WorkoutBasicsFormProps) {
       lastEmittedRef.current = snapshot
       onUpdateRef.current(current)
     }
-  }, [isValid, current])
+    // Only depend on primitive values, not the current object itself
+  }, [isValid, name, description, difficulty, estimatedTime, isTemplate, isPublic, current])
 
   const handleDifficultyChange = (value: string) => {
     setValue('difficulty', value as any, { shouldValidate: true })
@@ -188,7 +189,7 @@ export function WorkoutBasicsForm({ data, onUpdate }: WorkoutBasicsFormProps) {
             {errors.estimatedTime && (
               <p className="text-sm text-destructive">{errors.estimatedTime.message}</p>
             )}
-            
+
             {/* Time Presets */}
             <div className="flex flex-wrap gap-2">
               {TIME_PRESETS.map((minutes) => (
@@ -267,11 +268,11 @@ export function WorkoutBasicsForm({ data, onUpdate }: WorkoutBasicsFormProps) {
                   {DIFFICULTY_OPTIONS.find(d => d.value === current.difficulty)?.label}
                 </Badge>
               </div>
-              
+
               {current.description && (
                 <p className="text-muted-foreground">{current.description}</p>
               )}
-              
+
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />

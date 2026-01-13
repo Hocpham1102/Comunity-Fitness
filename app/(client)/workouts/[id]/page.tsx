@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Dumbbell, Clock, ArrowLeft, Play, Target, Zap, Edit } from 'lucide-react'
 import Link from 'next/link'
+import DeleteWorkoutButton from '@/components/features/workouts/DeleteWorkoutButton'
 
 async function getBaseUrl() {
     const hdrs = await headers()
@@ -107,12 +108,20 @@ export default async function WorkoutDetailsPage({ params }: WorkoutDetailsPageP
 
                                 {/* Edit button - only for Custom workouts */}
                                 {!workout.isTemplate && (
-                                    <Button size="lg" variant="outline" asChild className="gap-2">
-                                        <Link href={`/workouts/edit/${id}`}>
-                                            <Edit className="w-5 h-5" />
-                                            Edit Workout
-                                        </Link>
-                                    </Button>
+                                    <>
+                                        <Button size="lg" variant="outline" asChild className="gap-2">
+                                            <Link href={`/workouts/edit/${id}`}>
+                                                <Edit className="w-5 h-5" />
+                                                Edit Workout
+                                            </Link>
+                                        </Button>
+                                        <DeleteWorkoutButton
+                                            workoutId={id}
+                                            workoutName={workout.name}
+                                            redirectUrl="/workouts"
+                                            size="lg"
+                                        />
+                                    </>
                                 )}
                             </div>
                         </div>

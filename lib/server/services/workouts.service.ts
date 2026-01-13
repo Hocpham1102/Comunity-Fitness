@@ -137,6 +137,13 @@ export async function listWorkouts(params: ListWorkoutsParams, user?: AuthUser) 
       where,
       include: {
         _count: { select: { exercises: true } },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       skip,

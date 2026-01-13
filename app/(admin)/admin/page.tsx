@@ -1,6 +1,43 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { headers } from 'next/headers'
+import { Users, Dumbbell, Activity, UtensilsCrossed } from 'lucide-react'
 
-export default function AdminDashboardPage() {
+async function getBaseUrl() {
+  const hdrs = await headers()
+  const host = hdrs.get('host')
+  const proto = hdrs.get('x-forwarded-proto') ?? 'http'
+  return `${proto}://${host}`
+}
+
+async function fetchStats() {
+  try {
+    const base = process.env.NEXT_PUBLIC_APP_URL || (await getBaseUrl())
+    const hdrs = await headers()
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
+    const res = await fetch(`${base}/api/admin/stats`, {
+      cache: 'no-store',
+      headers: {
+        cookie: hdrs.get('cookie') ?? '',
+      },
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!res.ok) return null
+    return res.json()
+  } catch (error) {
+    console.error('Failed to fetch stats:', error)
+    return null
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const stats = await fetchStats()
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,11 +53,12 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-sm font-medium">
               Total Users
             </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              {stats?.userGrowth > 0 ? '+' : ''}{stats?.userGrowth || 0}% from last month
             </p>
           </CardContent>
         </Card>
@@ -28,13 +66,14 @@ export default function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Trainers
+              Workout Templates
             </CardTitle>
+            <Dumbbell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
+            <div className="text-2xl font-bold">{stats?.totalWorkouts || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +3 new this week
+              Available for users
             </p>
           </CardContent>
         </Card>
@@ -42,13 +81,14 @@ export default function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Monthly Revenue
+              Exercises
             </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,847</div>
+            <div className="text-2xl font-bold">{stats?.totalExercises || 0}</div>
             <p className="text-xs text-muted-foreground">
-              +8% from last month
+              In exercise database
             </p>
           </CardContent>
         </Card>
@@ -56,13 +96,14 @@ export default function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Premium Subscriptions
+              Food Items
             </CardTitle>
+            <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">892</div>
+            <div className="text-2xl font-bold">{stats?.totalFoods || 0}</div>
             <p className="text-xs text-muted-foreground">
-              72% conversion rate
+              In food database
             </p>
           </CardContent>
         </Card>
@@ -71,32 +112,26 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Platform Statistics</CardTitle>
             <CardDescription>
-              Latest platform activity
+              Key metrics and activity
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    New user registration
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    john.doe@example.com • 2 minutes ago
-                  </p>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">New Users This Month</span>
+                <span className="text-sm font-bold">{stats?.currentMonthUsers || 0}</span>
               </div>
-              <div className="flex items-center">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Trainer verification approved
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Sarah Wilson • 1 hour ago
-                  </p>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Total Workout Logs</span>
+                <span className="text-sm font-bold">{stats?.totalWorkoutLogs || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">User Growth</span>
+                <span className={`text-sm font-bold ${(stats?.userGrowth || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {stats?.userGrowth > 0 ? '+' : ''}{stats?.userGrowth || 0}%
+                </span>
               </div>
             </div>
           </CardContent>
@@ -112,16 +147,16 @@ export default function AdminDashboardPage() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-sm font-medium">API Response Time</span>
-                <span className="text-sm text-green-600">45ms</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-sm font-medium">Database Status</span>
-                <span className="text-sm text-green-600">Healthy</span>
+                <span className="text-sm text-green-600 font-medium">Healthy</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium">Storage Usage</span>
-                <span className="text-sm">2.4GB / 10GB</span>
+                <span className="text-sm font-medium">API Status</span>
+                <span className="text-sm text-green-600 font-medium">Operational</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Last Updated</span>
+                <span className="text-sm">{new Date().toLocaleTimeString()}</span>
               </div>
             </div>
           </CardContent>

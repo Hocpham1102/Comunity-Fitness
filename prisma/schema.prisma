@@ -75,6 +75,7 @@ model User {
   workoutLogs   WorkoutLog[]
   nutritionLogs NutritionLog[]
   subscriptions Subscription[]
+  createdWorkouts Workout[] @relation("WorkoutCreator")
   
   // Trainer relationships
   trainerProfile   TrainerProfile?
@@ -264,6 +265,7 @@ model Workout {
   isPublic         Boolean           @default(true)
   
   createdById      String?
+  createdBy        User?             @relation("WorkoutCreator", fields: [createdById], references: [id], onDelete: SetNull)
   
   exercises        WorkoutExercise[]
   workoutLogs      WorkoutLog[]
@@ -273,6 +275,7 @@ model Workout {
 
   @@index([isPublic])
   @@index([isTemplate])
+  @@index([createdById])
 }
 
 model WorkoutExercise {

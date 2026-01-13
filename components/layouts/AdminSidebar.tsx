@@ -10,11 +10,17 @@ import {
   BarChart3,
   Settings,
   Shield,
+  Dumbbell,
+  Activity,
+  UtensilsCrossed,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: BarChart3 },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Workouts', href: '/admin/workouts', icon: Dumbbell },
+  { name: 'Exercises', href: '/admin/exercises', icon: Activity },
+  { name: 'Foods', href: '/admin/foods', icon: UtensilsCrossed },
   { name: 'Trainers', href: '/admin/trainers', icon: UserCheck },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Subscriptions', href: '/admin/subscriptions', icon: Shield },
@@ -32,7 +38,7 @@ export function AdminSidebar() {
           Admin Panel
         </span>
       </div>
-      
+
       <nav className="flex-1 px-2 py-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href
