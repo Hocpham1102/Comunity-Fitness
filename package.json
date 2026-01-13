@@ -79,5 +79,17 @@
     "tsx": "^4.21.0",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@prisma/client",
+      "@prisma/engines",
+      "@swc/core",
+      "@tailwindcss/oxide",
+      "esbuild",
+      "prisma",
+      "sharp"
+    ]
   }
 }
