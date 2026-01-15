@@ -40,78 +40,63 @@ export default function RestTimer({
   }
 
   return (
-    <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4">
+    <div className="bg-orange-900/40 border-2 border-orange-500/50 rounded-lg p-2 md:p-6 shadow-lg">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-orange-400 mb-2">Rest Time</h3>
-        
-        {/* Large countdown display */}
-        <div className="text-4xl font-bold text-orange-300 mb-4 font-mono">
+        {/* Compact header for mobile */}
+        <h3 className="text-sm md:text-xl font-bold text-orange-300 mb-1 md:mb-4 uppercase tracking-wide">Rest Time</h3>
+
+        {/* Countdown - Compact on mobile, large on desktop */}
+        <div className="text-5xl md:text-7xl font-bold text-orange-400 mb-2 md:mb-6 font-mono drop-shadow-lg">
           {formatTime(displayTime)}
         </div>
 
-        {/* Control buttons */}
-        <div className="flex justify-center gap-2">
+        {/* Status indicator - compact */}
+        {isPaused && (
+          <div className="mb-1 md:mb-2 text-orange-300 font-semibold text-sm">
+            ⏸️ Paused
+          </div>
+        )}
+
+        {/* Control buttons - Compact but with full text */}
+        <div className="flex flex-row justify-center gap-2 md:gap-3">
           <Button
             onClick={onSkipRest}
             variant="outline"
             size="sm"
-            className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+            className="border-2 border-orange-500 text-orange-300 hover:bg-orange-500/20 hover:text-orange-200 font-semibold text-xs md:text-base px-2 md:px-4"
           >
-            <SkipForward className="w-4 h-4 mr-1" />
-            Skip
+            <SkipForward className="w-3 h-3 md:w-5 md:h-5 mr-1 md:mr-2" />
+            <span className="text-xs md:text-base">Skip</span>
           </Button>
 
           <Button
             onClick={isPaused ? onResume : onPause}
             variant="outline"
             size="sm"
-            className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+            className="border-2 border-orange-500 text-orange-300 hover:bg-orange-500/20 hover:text-orange-200 font-semibold text-xs md:text-base px-2 md:px-4"
           >
             {isPaused ? (
-              <Play className="w-4 h-4 mr-1" />
+              <>
+                <Play className="w-3 h-3 md:w-5 md:h-5 mr-1 md:mr-2" />
+                <span className="text-xs md:text-base">Resume</span>
+              </>
             ) : (
-              <Pause className="w-4 h-4 mr-1" />
+              <>
+                <Pause className="w-3 h-3 md:w-5 md:h-5 mr-1 md:mr-2" />
+                <span className="text-xs md:text-base">Pause</span>
+              </>
             )}
-            {isPaused ? 'Resume' : 'Pause'}
           </Button>
 
           <Button
             onClick={() => onAddTime(30)}
             variant="outline"
             size="sm"
-            className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+            className="border-2 border-orange-500 text-orange-300 hover:bg-orange-500/20 hover:text-orange-200 font-semibold text-xs md:text-base px-2 md:px-4"
           >
-            <Plus className="w-4 h-4 mr-1" />
-            +30s
+            <Plus className="w-3 h-3 md:w-5 md:h-5 mr-1 md:mr-2" />
+            <span className="text-xs md:text-base">+30s</span>
           </Button>
-        </div>
-
-        {/* Progress ring */}
-        <div className="mt-4 flex justify-center">
-          <div className="relative w-16 h-16">
-            <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-orange-500/20"
-                stroke="currentColor"
-                strokeWidth="3"
-                fill="none"
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-orange-400"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-                strokeDasharray={`${(displayTime / (displayTime + restTimeLeft)) * 100}, 100`}
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-          </div>
         </div>
       </div>
     </div>

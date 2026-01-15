@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Check, ChevronDown, ChevronUp } from 'lucide-react'
@@ -13,6 +13,7 @@ interface SetLoggerProps {
   readonly previousWeight?: number
   readonly previousReps?: number
   readonly isResting: boolean
+  readonly isMobile?: boolean
 }
 
 export default function SetLogger({
@@ -22,11 +23,19 @@ export default function SetLogger({
   onCompleteSet,
   previousWeight = 0,
   previousReps = 0,
-  isResting
+  isResting,
+  isMobile = false
 }: SetLoggerProps) {
   const [weight, setWeight] = useState(previousWeight.toString())
   const [reps, setReps] = useState(previousReps.toString())
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  // Auto-expand when moving to next set
+  useEffect(() => {
+    if (isMobile && !isResting) {
+      setIsCollapsed(false)
+    }
+  }, [currentSet, isMobile, isResting])
 
   const handleCompleteSet = () => {
     const weightNum = Number.parseFloat(weight) || 0
@@ -48,6 +57,11 @@ export default function SetLogger({
     // Clear inputs for next set
     setWeight('')
     setReps('')
+
+    // Auto-collapse on mobile after completing set
+    if (isMobile) {
+      setIsCollapsed(true)
+    }
   }
 
   return (

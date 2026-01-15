@@ -285,80 +285,139 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
       {/* Current Exercise */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            {currentExercise.exercise.name}
+          <div className="flex items-center justify-between mb-2">
+            <CardTitle>{currentExercise.exercise.name}</CardTitle>
             <Badge variant="secondary">{currentExercise.exercise.difficulty}</Badge>
-          </CardTitle>
-          <div className="flex gap-2">
+          </div>
+          <div className="flex gap-2 flex-wrap">
             {currentExercise.exercise.muscleGroups.map(group => (
               <Badge key={group} variant="outline">{group}</Badge>
             ))}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Exercise Info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Sets:</span> {currentExercise.sets}
+          {/* Exercise Video/Thumbnail */}
+          {(currentExercise.exercise.videoUrl || currentExercise.exercise.thumbnailUrl) && (
+            <div className="rounded-lg overflow-hidden bg-muted">
+              {currentExercise.exercise.videoUrl ? (
+                <video
+                  src={currentExercise.exercise.videoUrl}
+                  controls
+                  className="w-full aspect-video object-cover"
+                  poster={currentExercise.exercise.thumbnailUrl || undefined}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : currentExercise.exercise.thumbnailUrl ? (
+                <img
+                  src={currentExercise.exercise.thumbnailUrl}
+                  alt={currentExercise.exercise.name}
+                  className="w-full aspect-video object-cover"
+                />
+              ) : null}
             </div>
-            <div>
-              <span className="text-muted-foreground">Reps:</span> {currentExercise.reps || 'N/A'}
+          )}
+
+          {/* Exercise Description */}
+          {currentExercise.exercise.description && (
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {currentExercise.exercise.description}
+              </p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Rest:</span> {currentExercise.rest || 60}s
+          )}
+
+          {/* Exercise Info - Improved Layout */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-muted/30 rounded-lg">
+              <div className="text-2xl font-bold text-primary">{currentExercise.sets}</div>
+              <div className="text-xs text-muted-foreground mt-1">Total Sets</div>
             </div>
-            <div>
-              <span className="text-muted-foreground">Set:</span> {currentSetNumber} of {currentExercise.sets}
+            <div className="text-center p-3 bg-muted/30 rounded-lg">
+              <div className="text-2xl font-bold text-primary">{currentExercise.reps || 'N/A'}</div>
+              <div className="text-xs text-muted-foreground mt-1">Target Reps</div>
+            </div>
+            <div className="text-center p-3 bg-muted/30 rounded-lg">
+              <div className="text-2xl font-bold text-primary">{currentExercise.rest || 60}s</div>
+              <div className="text-xs text-muted-foreground mt-1">Rest Time</div>
+            </div>
+            <div className="text-center p-3 bg-primary/10 rounded-lg border-2 border-primary/20">
+              <div className="text-2xl font-bold text-primary">{currentSetNumber}/{currentExercise.sets}</div>
+              <div className="text-xs text-muted-foreground mt-1">Current Set</div>
             </div>
           </div>
 
-          {/* Set Input */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Weight (kg)</label>
-              <Input
-                type="number"
-                placeholder="0"
-                step="0.5"
-                value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight || ''}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value)
-                  const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
-                  setSetData(prev => ({
-                    ...prev,
-                    [setKey]: { ...prev[setKey], weight: isNaN(value) ? 0 : value }
-                  }))
-                }}
-                className={(
-                  setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight <= 0 ||
-                  !setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight
-                ) ? 'border-red-500' : ''}
-              />
+          {/* Exercise Notes */}
+          {currentExercise.notes && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-2">
+                <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">💡 Note:</span>
+                <p className="text-sm text-blue-700 dark:text-blue-300 flex-1">
+                  {currentExercise.notes}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium">Reps Completed</label>
-              <Input
-                type="number"
-                placeholder="0"
-                min="1"
-                step="1"
-                value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.reps || ''}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value, 10)
-                  if (value < 1 || isNaN(value)) return
-                  const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
-                  setSetData(prev => ({
-                    ...prev,
-                    [setKey]: { ...prev[setKey], reps: value }
-                  }))
-                }}
-              />
+          )}
+
+          {/* Set Input - Improved Layout */}
+          <div className="space-y-4">
+            <div className="text-sm font-semibold text-muted-foreground">
+              Record Set {currentSetNumber}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Weight (kg)
+                  <span className="text-xs text-muted-foreground">(required)</span>
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Enter weight"
+                  step="0.5"
+                  min="0.5"
+                  value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight || ''}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value)
+                    const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
+                    setSetData(prev => ({
+                      ...prev,
+                      [setKey]: { ...prev[setKey], weight: isNaN(value) ? 0 : value }
+                    }))
+                  }}
+                  className={(
+                    setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight <= 0 ||
+                    !setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight
+                  ) ? 'border-red-500' : ''}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  Reps Completed
+                  <span className="text-xs text-muted-foreground">(required)</span>
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Enter reps"
+                  min="1"
+                  step="1"
+                  value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.reps || ''}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10)
+                    if (value < 1 || isNaN(value)) return
+                    const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
+                    setSetData(prev => ({
+                      ...prev,
+                      [setKey]: { ...prev[setKey], reps: value }
+                    }))
+                  }}
+                />
+              </div>
             </div>
           </div>
 
           {/* Action Buttons */}
           {isWorkoutComplete ? (
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-4 pt-4">
               <div className="p-6 bg-green-50 dark:bg-green-950/20 rounded-lg border-2 border-green-200 dark:border-green-800">
                 <h3 className="text-xl font-bold text-green-700 dark:text-green-400 mb-2">
                   🎉 Congratulations!
@@ -377,11 +436,12 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
               </div>
             </div>
           ) : (
-            <div className="flex gap-4">
+            <div className="flex gap-3 pt-4">
               <Button
                 onClick={handlePreviousExercise}
                 variant="outline"
                 disabled={currentExerciseIndex === 0}
+                className="flex-1"
               >
                 <SkipBack className="w-4 h-4 mr-2" />
                 Previous
@@ -389,8 +449,9 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
 
               <Button
                 onClick={handleSetComplete}
-                className="flex-1"
+                className="flex-[2]"
                 disabled={isResting}
+                size="lg"
               >
                 <Check className="w-4 h-4 mr-2" />
                 Complete Set
@@ -400,6 +461,7 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
                 onClick={handleNextExercise}
                 variant="outline"
                 disabled={currentExerciseIndex === totalExercises - 1}
+                className="flex-1"
               >
                 Next
                 <SkipForward className="w-4 h-4 ml-2" />

@@ -246,7 +246,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
       <ProgressHeader
         workoutName={workoutLog.title}
@@ -258,7 +258,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
       {/* Main content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Desktop: Exercise List Sidebar */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block lg:w-64 xl:w-72 border-r border-gray-800">
           <ExerciseList
             exercises={workoutLog.workout.exercises}
             currentExerciseIndex={currentExerciseIndex}
@@ -268,9 +268,9 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         </div>
 
         {/* Center: Video and Exercise Info */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-y-auto pb-32 lg:pb-0">
           {/* Video Player */}
-          <div className="p-4 pb-0 lg:pb-4">
+          <div className="p-4 lg:p-6">
             <VideoPlayer
               videoUrl={currentExercise.exercise.videoUrl}
               thumbnailUrl={currentExercise.exercise.thumbnailUrl}
@@ -279,14 +279,15 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
           </div>
 
           {/* Exercise Info */}
-          <div className="px-4 pb-4">
+          <div className="px-4 lg:px-6 pb-4 space-y-6">
+            {/* Exercise Header */}
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-2">
+              <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3">
                 {currentExercise.exercise.name}
               </h2>
 
-              <div className="flex justify-center gap-2 mb-4">
-                <Badge variant="secondary" className="bg-blue-600/20 text-blue-400">
+              <div className="flex justify-center gap-2 flex-wrap mb-4">
+                <Badge variant="secondary" className="bg-blue-600/20 text-blue-400 border border-blue-500/30">
                   {currentExercise.exercise.difficulty}
                 </Badge>
                 {currentExercise.exercise.muscleGroups.map(group => (
@@ -295,41 +296,113 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
                   </Badge>
                 ))}
               </div>
+            </div>
 
-              <div className="grid grid-cols-3 gap-4 text-sm text-gray-400 mb-6">
-                <div>
-                  <div className="font-semibold">Sets</div>
-                  <div className="text-white">{currentExercise.sets}</div>
-                </div>
-                <div>
-                  <div className="font-semibold">Reps</div>
-                  <div className="text-white">{currentExercise.reps || 'N/A'}</div>
-                </div>
-                <div>
-                  <div className="font-semibold">Rest</div>
-                  <div className="text-white">{currentExercise.rest || 60}s</div>
+            {/* Exercise Stats - Improved Cards */}
+            <div className="grid grid-cols-3 gap-3 lg:gap-4 max-w-2xl mx-auto">
+              <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
+                <div className="text-sm text-gray-400 mb-1">Total Sets</div>
+                <div className="text-2xl font-bold text-white">{currentExercise.sets}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
+                <div className="text-sm text-gray-400 mb-1">Target Reps</div>
+                <div className="text-2xl font-bold text-white">{currentExercise.reps || 'N/A'}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-lg p-4 text-center border border-gray-700/50">
+                <div className="text-sm text-gray-400 mb-1">Rest Time</div>
+                <div className="text-2xl font-bold text-white">{currentExercise.rest || 60}s</div>
+              </div>
+            </div>
+
+            {/* Current Set Indicator */}
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-orange-600/20 border border-orange-500/30 rounded-lg p-4 text-center">
+                <div className="text-sm text-orange-300 mb-1">Current Progress</div>
+                <div className="text-3xl font-bold text-orange-400">
+                  Set {currentSetNumber} of {currentExercise.sets}
                 </div>
               </div>
             </div>
+
+            {/* Exercise Description */}
+            {currentExercise.exercise.description && (
+              <div className="max-w-2xl mx-auto bg-gray-800/30 rounded-lg p-4 border border-gray-700/50">
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">📋 Description</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  {currentExercise.exercise.description}
+                </p>
+              </div>
+            )}
+
+            {/* Exercise Instructions */}
+            {currentExercise.exercise.instructions && (
+              <div className="max-w-2xl mx-auto bg-blue-900/20 rounded-lg p-4 border border-blue-700/30">
+                <h3 className="text-sm font-semibold text-blue-300 mb-2">💡 Instructions</h3>
+                <p className="text-sm text-blue-200/80 leading-relaxed whitespace-pre-line">
+                  {currentExercise.exercise.instructions}
+                </p>
+              </div>
+            )}
+
+            {/* Exercise Notes */}
+            {currentExercise.notes && (
+              <div className="max-w-2xl mx-auto bg-yellow-900/20 rounded-lg p-4 border border-yellow-700/30">
+                <h3 className="text-sm font-semibold text-yellow-300 mb-2">⚠️ Important Notes</h3>
+                <p className="text-sm text-yellow-200/80 leading-relaxed">
+                  {currentExercise.notes}
+                </p>
+              </div>
+            )}
+
+            {/* Equipment */}
+            {currentExercise.exercise.equipment && currentExercise.exercise.equipment.length > 0 && (
+              <div className="max-w-2xl mx-auto">
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">🏋️ Equipment Needed</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {currentExercise.exercise.equipment.map(item => (
+                    <Badge key={item} variant="outline" className="border-gray-600 text-gray-300 bg-gray-800/30">
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Desktop: Set Logger Sidebar */}
-        <div className="hidden lg:block w-80 p-4">
-          <SetLogger
-            currentSet={currentSetNumber}
-            totalSets={currentExercise.sets}
-            targetReps={currentExercise.reps}
-            onCompleteSet={handleSetComplete}
-            previousWeight={getPreviousSetData().weight}
-            previousReps={getPreviousSetData().reps}
+        <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-800 bg-gray-900/50">
+          <div className="h-full overflow-y-auto p-4 lg:p-6">
+            <SetLogger
+              currentSet={currentSetNumber}
+              totalSets={currentExercise.sets}
+              targetReps={currentExercise.reps}
+              onCompleteSet={handleSetComplete}
+              previousWeight={getPreviousSetData().weight}
+              previousReps={getPreviousSetData().reps}
+              isResting={isResting}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Rest Timer - Above ExerciseList on mobile */}
+      <div className="lg:hidden border-t border-gray-800 bg-gray-900 pb-20">
+        <div className="p-2">
+          <RestTimer
+            restTimeLeft={restTimeLeft}
             isResting={isResting}
+            onSkipRest={handleSkipRest}
+            onAddTime={handleAddTime}
+            onPause={handlePause}
+            onResume={handleResume}
+            isPaused={isPaused}
           />
         </div>
       </div>
 
-      {/* Mobile: Exercise Navigation with Set Logger (collapsible bottom panel) */}
-      <div className="lg:hidden">
+      {/* Mobile: Exercise Navigation with embedded Set Logger */}
+      <div className="lg:hidden border-t border-gray-800 bg-gray-900/80">
         <ExerciseList
           exercises={workoutLog.workout.exercises}
           currentExerciseIndex={currentExerciseIndex}
@@ -346,30 +419,19 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         />
       </div>
 
-      {/* Desktop/Tablet: Set Logger */}
-      <div className="hidden lg:block p-4">
-        <SetLogger
-          currentSet={currentSetNumber}
-          totalSets={currentExercise.sets}
-          targetReps={currentExercise.reps}
-          onCompleteSet={handleSetComplete}
-          previousWeight={getPreviousSetData().weight}
-          previousReps={getPreviousSetData().reps}
-          isResting={isResting}
-        />
-      </div>
-
-      {/* Rest Timer */}
-      <div className="p-4">
-        <RestTimer
-          restTimeLeft={restTimeLeft}
-          isResting={isResting}
-          onSkipRest={handleSkipRest}
-          onAddTime={handleAddTime}
-          onPause={handlePause}
-          onResume={handleResume}
-          isPaused={isPaused}
-        />
+      {/* Desktop: Rest Timer at bottom */}
+      <div className="hidden lg:block border-t border-gray-800 bg-gray-900">
+        <div className="p-4">
+          <RestTimer
+            restTimeLeft={restTimeLeft}
+            isResting={isResting}
+            onSkipRest={handleSkipRest}
+            onAddTime={handleAddTime}
+            onPause={handlePause}
+            onResume={handleResume}
+            isPaused={isPaused}
+          />
+        </div>
       </div>
     </div>
   )

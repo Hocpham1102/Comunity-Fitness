@@ -61,36 +61,45 @@ export default function ExerciseList({
   if (isMobile) {
     const currentExercise = exercises[currentExerciseIndex]
 
+    // Auto-collapse after completing set
+    const handleCompleteSetWrapper = (weight: number, reps: number) => {
+      if (onCompleteSet) {
+        onCompleteSet(weight, reps)
+        // Collapse the panel after completing set
+        setIsExpanded(false)
+      }
+    }
+
     return (
       <>
         {/* Collapsed bottom bar - chỉ hint, không có Set Logger */}
         {!isExpanded && (
           <button
-            className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 z-50 w-full p-4 hover:bg-gray-700 transition-colors"
+            className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 z-50 w-full p-1.5 md:p-4 hover:bg-gray-700 transition-colors"
             onClick={() => setIsExpanded(true)}
             aria-label="Expand exercise list and set logger"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <ChevronUp className="w-5 h-5 text-gray-400" />
+              <div className="flex items-center gap-2 md:gap-3">
+                <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
                 <div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-xs md:text-sm text-gray-400">
                     {currentExerciseIndex + 1} of {exercises.length}
                   </div>
-                  <div className="font-semibold text-white">
+                  <div className="font-semibold text-white text-sm md:text-base">
                     {currentExercise?.exercise.name}
                   </div>
                   <div className="text-xs text-gray-500">
-                    Set {currentSet || 1} of {totalSets || 1} • Tap to open
+                    Set {currentSet || 1}/{totalSets || 1} • Tap to open
                   </div>
                 </div>
               </div>
               <div className="flex gap-1">
-                {currentExercise?.exercise.muscleGroups.slice(0, 2).map((group) => (
+                {currentExercise?.exercise.muscleGroups.slice(0, 1).map((group) => (
                   <Badge
                     key={group}
                     variant="outline"
-                    className="text-xs px-2 py-0 border-gray-600 text-gray-300"
+                    className="text-xs px-1 md:px-2 py-0 border-gray-600 text-gray-300"
                   >
                     {group}
                   </Badge>
@@ -104,7 +113,7 @@ export default function ExerciseList({
         {isExpanded && (
           <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 z-50 animate-slide-up">
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800/95">
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-semibold text-white">Exercises</h3>
                 <span className="text-sm text-gray-400">
@@ -113,11 +122,12 @@ export default function ExerciseList({
               </div>
               <Button
                 onClick={() => setIsExpanded(false)}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-gray-700"
+                variant="outline"
+                size="lg"
+                className="text-white border-gray-600 hover:bg-gray-700 hover:border-gray-500 bg-gray-800"
               >
-                <ChevronDown className="w-5 h-5" />
+                <ChevronDown className="w-6 h-6 mr-2" />
+                <span className="font-medium">Close</span>
               </Button>
             </div>
 
@@ -126,11 +136,12 @@ export default function ExerciseList({
               <SetLogger
                 currentSet={currentSet || 1}
                 totalSets={totalSets || 1}
-                targetReps={targetReps}
-                onCompleteSet={onCompleteSet || (() => {})}
+                targetReps={targetReps || null}
+                onCompleteSet={handleCompleteSetWrapper}
                 previousWeight={previousWeight}
                 previousReps={previousReps}
-                isResting={isResting}
+                isResting={isResting || false}
+                isMobile={true}
               />
             </div>
 
@@ -140,7 +151,7 @@ export default function ExerciseList({
                 {exercises.map((workoutExercise, index) => {
                   const isCurrent = index === currentExerciseIndex
                   const isCompleted = completedExercises.has(index)
-                  
+
                   return (
                     <button
                       key={workoutExercise.id}
@@ -174,7 +185,7 @@ export default function ExerciseList({
                             ))}
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           {isCompleted && (
                             <Check className="w-4 h-4 text-green-400" />
@@ -230,12 +241,12 @@ export default function ExerciseList({
     <div className="w-64 bg-gray-800 border-r border-gray-700 overflow-y-auto">
       <div className="p-4">
         <h3 className="text-lg font-semibold text-white mb-4">Exercises</h3>
-        
+
         <div className="space-y-2">
           {exercises.map((workoutExercise, index) => {
             const isCurrent = index === currentExerciseIndex
             const isCompleted = completedExercises.has(index)
-            
+
             return (
               <button
                 key={workoutExercise.id}
@@ -266,7 +277,7 @@ export default function ExerciseList({
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {isCompleted && (
                       <Check className="w-4 h-4 text-green-400" />
