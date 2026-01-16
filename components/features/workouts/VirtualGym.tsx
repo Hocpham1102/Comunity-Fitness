@@ -34,15 +34,32 @@ interface WorkoutExercise {
   exercise: Exercise
 }
 
+interface SetLog {
+  id: string
+  setNumber: number
+  reps: number | null
+  weight: number | null
+  completed: boolean
+}
+
+interface ExerciseLog {
+  id: string
+  exerciseId: string
+  sets: SetLog[]
+}
+
 interface WorkoutLog {
   id: string
   title: string
   currentExerciseOrder: number | null
   currentSetNumber: number | null
   restUntil: string | null
+  startedAt: string
+  updatedAt?: string | null
   workout: {
     exercises: WorkoutExercise[]
   }
+  exerciseLogs?: ExerciseLog[]
 }
 
 interface VirtualGymProps {
@@ -61,6 +78,61 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
 
   const currentExercise = workoutLog.workout.exercises[currentExerciseIndex]
   const totalExercises = workoutLog.workout.exercises.length
+
+  // Load completed sets from exerciseLogs on mount
+  useEffect(() => {
+    if (!workoutLog.exerciseLogs || workoutLog.exerciseLogs.length === 0) return
+
+    const newSetData: Record<string, { reps: number; weight: number }> = {}
+    const newCompletedExercises = new Set<number>()
+
+    // Process each exercise log
+    workoutLog.exerciseLogs.forEach((exerciseLog) => {
+      // Find the exercise index in the workout
+      const exerciseIndex = workoutLog.workout.exercises.findIndex(
+        (ex) => ex.exerciseId === exerciseLog.exerciseId
+      )
+
+      if (exerciseIndex === -1) return
+
+      // Load all completed sets for this exercise
+      exerciseLog.sets.forEach((set) => {
+        if (set.completed && set.reps !== null && set.weight !== null) {
+          const setKey = `${exerciseLog.exerciseId}-${set.setNumber}`
+          newSetData[setKey] = {
+            reps: set.reps,
+            weight: set.weight,
+          }
+        }
+      })
+
+      // Check if all sets for this exercise are completed
+      const exercise = workoutLog.workout.exercises[exerciseIndex]
+      const completedSetsCount = exerciseLog.sets.filter((s) => s.completed).length
+      if (completedSetsCount >= exercise.sets) {
+        newCompletedExercises.add(exerciseIndex)
+      }
+    })
+
+    setSetData(newSetData)
+    setCompletedExercises(newCompletedExercises)
+  }, [workoutLog])
+
+  // Warn user if workout is stale (>24h inactive)
+  useEffect(() => {
+    if (!workoutLog.updatedAt && !workoutLog.startedAt) return
+
+    const lastUpdate = new Date(workoutLog.updatedAt || workoutLog.startedAt)
+    const hoursSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60)
+
+    if (hoursSince > 24) {
+      toast.warning(
+        `⚠️ This workout has been inactive for ${Math.floor(hoursSince)} hours. ` +
+        `Make sure to warm up properly before continuing for muscle safety.`,
+        { duration: 8000 }
+      )
+    }
+  }, [workoutLog])
 
   // Rest timer effect
   useEffect(() => {
@@ -207,6 +279,33 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
     }
   }
 
+  const handleExit = async () => {
+    try {
+      // Save current progress before exiting
+      await fetch(`/api/workout-logs/${workoutLog.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentExerciseOrder: currentExerciseIndex,
+          currentSetNumber: currentSetNumber,
+        }),
+      })
+
+      toast.success('Progress saved!')
+      // Force redirect to progress page
+      setTimeout(() => {
+        window.location.href = '/progress'
+      }, 500)
+    } catch (error) {
+      toast.error('Failed to save progress')
+      console.error(error)
+      // Still redirect even if save fails
+      setTimeout(() => {
+        window.location.href = '/progress'
+      }, 500)
+    }
+  }
+
   // Workout completion screen
   if (isWorkoutComplete) {
     return (
@@ -252,7 +351,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         workoutName={workoutLog.title}
         currentExercise={currentExerciseIndex + 1}
         totalExercises={totalExercises}
-        onExit={() => { }}
+        onExit={handleExit}
       />
 
       {/* Main content */}

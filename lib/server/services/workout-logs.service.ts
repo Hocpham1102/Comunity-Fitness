@@ -74,6 +74,42 @@ export async function createWorkoutLog(userId: string, data: CreateWorkoutLogDat
   })
 }
 
+/**
+ * Find existing incomplete workout log or create a new one
+ * This prevents duplicate workout logs for the same workout
+ */
+export async function findOrCreateWorkoutLog(userId: string, data: CreateWorkoutLogData) {
+  // First, check if there's an incomplete workout log for this workout
+  const existingLog = await db.workoutLog.findFirst({
+    where: {
+      userId,
+      workoutId: data.workoutId,
+      completedAt: null, // Not completed yet
+    },
+    include: {
+      workout: {
+        include: {
+          exercises: {
+            include: { exercise: true },
+            orderBy: { order: 'asc' },
+          },
+        },
+      },
+    },
+    orderBy: {
+      startedAt: 'desc', // Get the most recent one
+    },
+  })
+
+  // If found, return the existing log
+  if (existingLog) {
+    return existingLog
+  }
+
+  // Otherwise, create a new one
+  return createWorkoutLog(userId, data)
+}
+
 export async function updateWorkoutProgress(
   logId: string,
   data: UpdateProgressData,
@@ -184,7 +220,18 @@ export async function getWorkoutLogById(logId: string, user: AuthUser) {
     where: { id: logId },
     include: {
       workout: {
-        select: { id: true, name: true, difficulty: true, description: true },
+        select: {
+          id: true,
+          name: true,
+          difficulty: true,
+          description: true,
+          exercises: {
+            include: {
+              exercise: true,
+            },
+            orderBy: { order: 'asc' },
+          },
+        },
       },
       exerciseLogs: {
         include: {

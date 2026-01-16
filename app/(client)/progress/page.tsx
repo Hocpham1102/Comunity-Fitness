@@ -66,6 +66,20 @@ export default async function ProgressPage() {
     return `${mins}m`
   }
 
+  const isWorkoutStale = (workout: any) => {
+    if (workout.completedAt) return false
+    const lastUpdate = new Date(workout.updatedAt || workout.startedAt)
+    const now = new Date()
+    const hoursDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60)
+    return hoursDiff > 24
+  }
+
+  const getStaleHours = (workout: any) => {
+    const lastUpdate = new Date(workout.updatedAt || workout.startedAt)
+    const now = new Date()
+    return Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60))
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -111,7 +125,11 @@ export default async function ProgressPage() {
                 <Flame className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{Math.round(statsData.totalVolume / 1000)}k</div>
+                <div className="text-2xl font-bold">
+                  {statsData.totalVolume >= 1000
+                    ? `${Math.round(statsData.totalVolume / 1000)}k`
+                    : Math.round(statsData.totalVolume)}
+                </div>
                 <div className="text-sm text-muted-foreground">Total Volume (kg)</div>
               </div>
             </div>
@@ -153,42 +171,66 @@ export default async function ProgressPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {history.map((workout: any) => (
-                <div
-                  key={workout.id}
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Dumbbell className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-semibold">{workout.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {workout.workout?.name && `${workout.workout.name} • `}
-                        {formatDate(workout.startedAt)}
-                        {workout.duration && ` • ${formatDuration(workout.duration)}`}
+              {history.map((workout: any) => {
+                const isStale = isWorkoutStale(workout)
+                const staleHours = isStale ? getStaleHours(workout) : 0
+
+                return (
+                  <div
+                    key={workout.id}
+                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Dumbbell className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <div className="font-semibold">{workout.title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {workout.workout?.name && `${workout.workout.name} • `}
+                          {formatDate(workout.startedAt)}
+                          {workout.duration && ` • ${formatDuration(workout.duration)}`}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      {workout.completedAt ? (
+                        <>
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            Completed
+                          </Badge>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/workouts/session/${workout.id}`}>View</Link>
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Badge variant="outline">In Progress</Badge>
+                          {isStale && (
+                            <Badge variant="destructive" className="bg-orange-100 text-orange-800 border-orange-300">
+                              ⚠️ {staleHours}h ago
+                            </Badge>
+                          )}
+                          {isStale ? (
+                            <>
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href={`/workouts/${workout.workoutId}/start`}>🔄 Start Fresh</Link>
+                              </Button>
+                              <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+                                <Link href={`/workout/${workout.workoutId}/active?logId=${workout.id}`}>Continue Anyway</Link>
+                              </Button>
+                            </>
+                          ) : (
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/workout/${workout.workoutId}/active?logId=${workout.id}`}>Continue</Link>
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {workout.completedAt ? (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Completed
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">
-                        In Progress
-                      </Badge>
-                    )}
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/workouts/${workout.workoutId}/start`}>
-                        {workout.completedAt ? 'View' : 'Continue'}
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </CardContent>
@@ -231,7 +273,7 @@ export default async function ProgressPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                 <div className="text-2xl">💪</div>
                 <div>
@@ -241,7 +283,7 @@ export default async function ProgressPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                 <div className="text-2xl">🔥</div>
                 <div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/server/auth/session'
-import { createWorkoutLog, getWorkoutHistory } from '@/lib/server/services/workout-logs.service'
+import { findOrCreateWorkoutLog, getWorkoutHistory } from '@/lib/server/services/workout-logs.service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
     }
 
-    const log = await createWorkoutLog(user.id, {
+    const log = await findOrCreateWorkoutLog(user.id, {
       workoutId,
       title,
       notes,

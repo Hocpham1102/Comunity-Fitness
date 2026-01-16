@@ -1,9 +1,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { auth } from '@/auth'
 import { getNutritionStats } from '@/lib/server/services/nutrition-logs.service'
+import { getDashboardStats } from '@/lib/server/services/dashboard.service'
+import { formatDistanceToNow } from 'date-fns'
+import { vi } from 'date-fns/locale'
 
 export default async function DashboardPage() {
   const session = await auth()
+
+  // Fetch dashboard stats
+  let dashboardStats = {
+    workouts: { total: 0, change: 0 },
+    calories: { total: 0, change: 0 },
+    weight: { current: null as number | null, change: null as number | null, unit: 'kg' },
+    streak: { days: 0, message: 'Start your first workout!' },
+    recentWorkouts: [] as Array<{ id: string; title: string; duration: number | null; startedAt: Date }>,
+  }
 
   // Fetch today's nutrition stats
   let nutritionStats = {
@@ -15,9 +27,14 @@ export default async function DashboardPage() {
 
   if (session?.user?.id) {
     try {
-      nutritionStats = await getNutritionStats(session.user.id)
+      const [stats, nutrition] = await Promise.all([
+        getDashboardStats(session.user.id),
+        getNutritionStats(session.user.id),
+      ])
+      dashboardStats = stats
+      nutritionStats = nutrition
     } catch (error) {
-      console.error('Error fetching nutrition stats:', error)
+      console.error('Error fetching dashboard data:', error)
     }
   }
 
@@ -45,9 +62,9 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{dashboardStats.workouts.total}</div>
             <p className="text-xs text-muted-foreground">
-              +2 from last week
+              {dashboardStats.workouts.change > 0 ? '+' : ''}{dashboardStats.workouts.change}% from last week
             </p>
           </CardContent>
         </Card>
@@ -55,13 +72,13 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Calories Burned
+              Calories Burned Today
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,847</div>
+            <div className="text-2xl font-bold">{dashboardStats.calories.total.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              +180 from yesterday
+              {dashboardStats.calories.change > 0 ? '+' : ''}{dashboardStats.calories.change} from yesterday
             </p>
           </CardContent>
         </Card>
@@ -73,9 +90,13 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">75.2 kg</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats.weight.current ? `${dashboardStats.weight.current} kg` : 'Not tracked'}
+            </div>
             <p className="text-xs text-muted-foreground">
-              -0.8 kg from last month
+              {dashboardStats.weight.change !== null
+                ? `${dashboardStats.weight.change > 0 ? '+' : ''}${dashboardStats.weight.change} kg from last month`
+                : 'No previous data'}
             </p>
           </CardContent>
         </Card>
@@ -87,9 +108,9 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">7 days</div>
+            <div className="text-2xl font-bold">{dashboardStats.streak.days} days</div>
             <p className="text-xs text-muted-foreground">
-              Keep it up! 🔥
+              {dashboardStats.streak.message}
             </p>
           </CardContent>
         </Card>
@@ -105,26 +126,28 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Upper Body Strength
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    45 minutes • 2 days ago
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Cardio HIIT
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    30 minutes • 3 days ago
-                  </p>
-                </div>
-              </div>
+              {dashboardStats.recentWorkouts.length > 0 ? (
+                dashboardStats.recentWorkouts.map((workout) => (
+                  <div key={workout.id} className="flex items-center">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {workout.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {workout.duration ? `${workout.duration} minutes • ` : ''}
+                        {formatDistanceToNow(new Date(workout.startedAt), {
+                          addSuffix: true,
+                          locale: vi
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No workouts yet. Start your first workout to see it here!
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
