@@ -10,6 +10,14 @@ import { NotificationsProvider } from '@/providers/notifications-provider'
 import { AvatarProvider } from '@/contexts/avatar-context'
 import './globals.css'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+}
+
 export const metadata: Metadata = {
   title: {
     default: 'Fitness Carrot - Your Personal Fitness Companion',
@@ -23,13 +31,6 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://fitnesscarrot.com'),
   alternates: {
     canonical: '/',
-  },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover',
   },
   openGraph: {
     type: 'website',
