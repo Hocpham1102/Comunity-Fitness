@@ -68,30 +68,32 @@ export default function SetLogger({
     <div className="bg-gray-800 rounded-lg overflow-hidden">
       {/* Header - Always visible */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+        className="flex items-center justify-between cursor-pointer hover:bg-gray-700/50 transition-colors px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white">
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h3 className="text-[0.875rem] sm:text-[1rem] md:text-[1.125rem] font-semibold text-white truncate">
             Set {currentSet} of {totalSets}
           </h3>
           {targetReps && !isCollapsed && (
-            <p className="text-sm text-gray-400">Target: {targetReps} reps</p>
+            <p className="text-[0.6875rem] sm:text-[0.75rem] md:text-[0.875rem] text-gray-400 truncate">
+              Target: {targetReps} reps
+            </p>
           )}
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="text-gray-400 hover:text-white"
+          className="text-gray-400 hover:text-white h-auto p-1 sm:p-1.5 md:p-2 ml-1 sm:ml-2 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation()
             setIsCollapsed(!isCollapsed)
           }}
         >
           {isCollapsed ? (
-            <ChevronUp className="w-5 h-5" />
+            <ChevronUp className="w-[1.25em] h-[1.25em] sm:w-[1.5em] sm:h-[1.5em]" />
           ) : (
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-[1.25em] h-[1.25em] sm:w-[1.5em] sm:h-[1.5em]" />
           )}
         </Button>
       </div>

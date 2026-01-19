@@ -367,7 +367,12 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
         </div>
 
         {/* Center: Video and Exercise Info */}
-        <div className="flex-1 flex flex-col overflow-y-auto pb-32 lg:pb-0">
+        <div
+          className="flex-1 flex flex-col overflow-y-auto lg:pb-0"
+          style={{
+            paddingBottom: 'max(10rem, calc(10rem + env(safe-area-inset-bottom)))',
+          }}
+        >
           {/* Video Player */}
           <div className="p-4 lg:p-6">
             <VideoPlayer
@@ -486,7 +491,12 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
       </div>
 
       {/* Rest Timer - Above ExerciseList on mobile */}
-      <div className="lg:hidden border-t border-gray-800 bg-gray-900 pb-20">
+      <div
+        className="lg:hidden border-t border-gray-800 bg-gray-900"
+        style={{
+          paddingBottom: 'max(4rem, calc(4rem + env(safe-area-inset-bottom)))',
+        }}
+      >
         <div className="p-2">
           <RestTimer
             restTimeLeft={restTimeLeft}
