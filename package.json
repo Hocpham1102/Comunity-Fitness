@@ -7,7 +7,8 @@
     "dev": "next dev --turbo",
     "lint": "next lint",
     "start": "next start",
-    "seed:foods": "tsx prisma/seeds/seed-foods.ts"
+    "seed:foods": "tsx prisma/seeds/seed-foods.ts",
+    "seed:exercises": "tsx prisma/seeds/seed-exercises.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",

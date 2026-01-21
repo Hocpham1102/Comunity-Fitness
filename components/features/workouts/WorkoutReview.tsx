@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { 
-  FileText, 
-  Clock, 
-  Target, 
-  Dumbbell, 
-  Repeat, 
-  Users, 
+import {
+  FileText,
+  Clock,
+  Target,
+  Dumbbell,
+  Repeat,
+  Users,
   Edit3,
   CheckCircle2,
   AlertCircle,
@@ -48,17 +48,17 @@ export function WorkoutReview({ data, onEditStep }: WorkoutReviewProps) {
     }, 0) / 60
   )
 
-  const validationIssues = []
-  
+  const validationIssues: string[] = []
+
   // Check for validation issues
   if (data.exercises.length === 0) {
     validationIssues.push('No exercises added')
   }
-  
+
   if (data.exercises.some(ex => !ex.reps && !ex.duration)) {
     validationIssues.push('Some exercises missing reps or duration')
   }
-  
+
   if (data.exercises.some(ex => ex.sets < 1)) {
     validationIssues.push('Some exercises have invalid sets')
   }
@@ -88,7 +88,7 @@ export function WorkoutReview({ data, onEditStep }: WorkoutReviewProps) {
             <p className="text-muted-foreground mt-1">{data.description}</p>
           )}
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center gap-3">
             <Clock className="w-5 h-5 text-primary" />
@@ -97,7 +97,7 @@ export function WorkoutReview({ data, onEditStep }: WorkoutReviewProps) {
               <div className="text-sm text-muted-foreground">Estimated time</div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Target className="w-5 h-5 text-primary" />
             <div>
@@ -107,7 +107,7 @@ export function WorkoutReview({ data, onEditStep }: WorkoutReviewProps) {
               <div className="text-sm text-muted-foreground mt-1">Difficulty</div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Users className="w-5 h-5 text-primary" />
             <div>
@@ -231,9 +231,9 @@ export function WorkoutReview({ data, onEditStep }: WorkoutReviewProps) {
             <div className="text-sm text-muted-foreground">Est. Minutes</div>
           </div>
         </div>
-        
+
         <Separator className="my-4" />
-        
+
         <div className="text-center">
           <div className="text-lg font-semibold">
             Actual vs Estimated Time
@@ -310,13 +310,13 @@ export function WorkoutReview({ data, onEditStep }: WorkoutReviewProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="text-sm text-blue-700">
-          <p>• Start with lighter weights and gradually increase</p>
-          <p>• Take adequate rest between sets (60-90 seconds)</p>
-          <p>• Focus on proper form over heavy weights</p>
-          <p>• Warm up before starting your workout</p>
-          <p>• Cool down and stretch after completing</p>
-        </div>
+        <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+          <li>Start with lighter weights and gradually increase</li>
+          <li>Take adequate rest between sets (60-90 seconds)</li>
+          <li>Focus on proper form over heavy weights</li>
+          <li>Warm up before starting your workout</li>
+          <li>Cool down and stretch after completing</li>
+        </ul>
       </CardContent>
     </Card>
   )

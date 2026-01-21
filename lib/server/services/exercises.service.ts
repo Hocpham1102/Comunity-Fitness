@@ -104,6 +104,8 @@ export interface CreateExerciseData {
   difficulty: DifficultyLevel
   videoUrl?: string | null
   thumbnailUrl?: string | null
+  defaultWeight?: number | null
+  defaultReps?: number | null
 }
 
 export async function createExercise(data: CreateExerciseData) {
@@ -138,6 +140,8 @@ export async function getExerciseById(id: string) {
       difficulty: true,
       videoUrl: true,
       thumbnailUrl: true,
+      defaultWeight: true,
+      defaultReps: true,
     },
   })
 }

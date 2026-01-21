@@ -139,7 +139,13 @@ export default async function WorkoutDetailsPage({ params }: WorkoutDetailsPageP
                         </div>
 
                         {workout.exercises && workout.exercises.length > 0 ? (
-                            <div className="space-y-4">
+                            <div
+                                className="space-y-4 max-h-[70vh] overflow-y-auto exercise-list-scrollbar pr-2"
+                                style={{
+                                    scrollbarWidth: 'thin',
+                                    scrollbarColor: '#6B7280 #1F2937'
+                                }}
+                            >
                                 {workout.exercises.map((workoutExercise: any, index: number) => (
                                     <Card key={workoutExercise.id} className="border-l-4 border-l-primary/50">
                                         <CardContent className="p-6">

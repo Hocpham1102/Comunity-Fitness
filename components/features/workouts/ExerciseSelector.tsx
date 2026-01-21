@@ -8,7 +8,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Search, Filter, Plus, Grid, List, X, Dumbbell } from 'lucide-react'
-import { type WorkoutExerciseConfig, type Exercise } from '@/lib/shared/schemas/workout-client.schema'
+import { type WorkoutExerciseConfig } from '@/lib/shared/schemas/workout-client.schema'
+import { type Exercise } from '@/lib/shared/schemas/workout.schema'
 import { useToast } from '@/hooks/use-toast'
 
 interface ExerciseSelectorProps {
@@ -136,7 +137,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
 
   const addExercise = (exercise: Exercise) => {
     const isAlreadyAdded = selectedExercises.some(selected => selected.exerciseId === exercise.id)
-    
+
     if (isAlreadyAdded) {
       toast({
         title: 'Already added',
@@ -195,7 +196,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
           <div className="flex-1">
             <h3 className="font-semibold text-sm mb-1">{exercise.name}</h3>
             <p className="text-xs text-muted-foreground line-clamp-2">
-              {exercise.description}
+              {exercise.description || 'No description available'}
             </p>
           </div>
           <Button
@@ -211,9 +212,9 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
         <div className="space-y-2">
           {/* Muscle Groups */}
           <div className="flex flex-wrap gap-1">
-            {exercise.muscleGroups.slice(0, 3).map((group) => (
+            {exercise.muscleGroups.slice(0, 3).map((group: string) => (
               <Badge key={group} variant="secondary" className="text-xs">
-                {MUSCLE_GROUP_LABELS[group]}
+                {MUSCLE_GROUP_LABELS[group as keyof typeof MUSCLE_GROUP_LABELS]}
               </Badge>
             ))}
             {exercise.muscleGroups.length > 3 && (
@@ -225,9 +226,13 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
 
           {/* Equipment & Difficulty */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{EQUIPMENT_LABELS[exercise.equipment[0]]}</span>
+            <span>
+              {exercise.equipment[0]
+                ? EQUIPMENT_LABELS[exercise.equipment[0] as keyof typeof EQUIPMENT_LABELS]
+                : 'No equipment'}
+            </span>
             <Badge variant="outline" className="text-xs">
-              {DIFFICULTY_LABELS[exercise.difficulty]}
+              {DIFFICULTY_LABELS[exercise.difficulty as keyof typeof DIFFICULTY_LABELS]}
             </Badge>
           </div>
         </div>
@@ -241,7 +246,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
         <Dumbbell className="w-4 h-4" />
         Selected Exercises ({selectedExercises.length})
       </h3>
-      
+
       {selectedExercises.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
           No exercises selected yet. Add some exercises to get started!
@@ -264,7 +269,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => removeExercise(exercise.id)}
+                onClick={() => removeExercise(exercise.id || '')}
                 className="text-destructive hover:text-destructive"
               >
                 <X className="w-4 h-4" />
@@ -361,7 +366,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
             {filteredExercises.length} exercises
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
@@ -393,7 +398,7 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
           </Button>
         </div>
       ) : (
-        <div className={viewMode === 'grid' 
+        <div className={viewMode === 'grid'
           ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
           : 'space-y-2'
         }>

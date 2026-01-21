@@ -11,24 +11,32 @@
   --card-foreground: oklch(0.2 0.02 85);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 85);
-  --primary: oklch(0.65 0.19 45); /* Vibrant orange */
+  --primary: oklch(0.65 0.19 45);
+  /* Vibrant orange */
   --primary-foreground: oklch(0.99 0.01 85);
-  --secondary: oklch(0.68 0.15 135); /* Fresh green */
+  --secondary: oklch(0.68 0.15 135);
+  /* Fresh green */
   --secondary-foreground: oklch(0.99 0.01 85);
   --muted: oklch(0.96 0.01 85);
   --muted-foreground: oklch(0.5 0.02 85);
-  --accent: oklch(0.72 0.18 110); /* Lime green accent */
+  --accent: oklch(0.72 0.18 110);
+  /* Lime green accent */
   --accent-foreground: oklch(0.2 0.02 85);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.99 0.01 85);
   --border: oklch(0.92 0.01 85);
   --input: oklch(0.92 0.01 85);
   --ring: oklch(0.65 0.19 45);
-  --chart-1: oklch(0.65 0.19 45); /* Orange */
-  --chart-2: oklch(0.68 0.15 135); /* Green */
-  --chart-3: oklch(0.72 0.18 110); /* Lime */
-  --chart-4: oklch(0.75 0.12 85); /* Peach */
-  --chart-5: oklch(0.55 0.16 160); /* Teal */
+  --chart-1: oklch(0.65 0.19 45);
+  /* Orange */
+  --chart-2: oklch(0.68 0.15 135);
+  /* Green */
+  --chart-3: oklch(0.72 0.18 110);
+  /* Lime */
+  --chart-4: oklch(0.75 0.12 85);
+  /* Peach */
+  --chart-5: oklch(0.55 0.16 160);
+  /* Teal */
   --radius: 0.75rem;
   --sidebar: oklch(0.99 0.01 85);
   --sidebar-foreground: oklch(0.2 0.02 85);
@@ -120,6 +128,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -129,25 +138,77 @@
   .animate-slide-up {
     animation: slide-up 0.3s ease-out;
   }
-  
+
   @keyframes slide-up {
     from {
       transform: translateY(100%);
       opacity: 0;
     }
+
     to {
       transform: translateY(0);
       opacity: 1;
     }
   }
-  
+
   /* Hide scrollbar but keep scroll functionality */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
+    display: none;
+    /* Chrome, Safari and Opera */
   }
+}
+
+/* Custom scrollbar for exercise list sidebar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #1F2937;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #4B5563;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+/* Specific scrollbar for exercise list - more visible with blue theme */
+.exercise-list-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.exercise-list-scrollbar::-webkit-scrollbar-track {
+  background: #1F2937;
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.exercise-list-scrollbar::-webkit-scrollbar-thumb {
+  background: #3B82F6;
+  /* Blue-500 */
+  border-radius: 6px;
+  border: 2px solid #1F2937;
+  min-height: 40px;
+}
+
+.exercise-list-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #60A5FA;
+  /* Blue-400 - lighter on hover */
+}
+
+.exercise-list-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #2563EB;
+  /* Blue-600 - darker when dragging */
 }

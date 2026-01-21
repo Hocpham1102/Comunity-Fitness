@@ -83,6 +83,29 @@ function AdminExercisesContent() {
         return () => clearTimeout(timer)
     }, [searchQuery])
 
+    const handleDelete = async (exerciseId: string, exerciseName: string) => {
+        if (!confirm(`Are you sure you want to delete "${exerciseName}"? This action cannot be undone.`)) {
+            return
+        }
+
+        try {
+            const response = await fetch(`/api/exercises/${exerciseId}`, {
+                method: 'DELETE',
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to delete exercise')
+            }
+
+            toast.success(`"${exerciseName}" deleted successfully`)
+            // Refresh the list
+            fetchExercises()
+        } catch (error) {
+            console.error('Error deleting exercise:', error)
+            toast.error('Failed to delete exercise')
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -207,7 +230,10 @@ function AdminExercisesContent() {
                                                             Edit
                                                         </Link>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-600">
+                                                    <DropdownMenuItem
+                                                        className="text-red-600"
+                                                        onClick={() => handleDelete(exercise.id, exercise.name)}
+                                                    >
                                                         <Trash className="mr-2 h-4 w-4" />
                                                         Delete
                                                     </DropdownMenuItem>

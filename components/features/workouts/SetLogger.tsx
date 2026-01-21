@@ -37,13 +37,30 @@ export default function SetLogger({
     }
   }, [currentSet, isMobile, isResting])
 
+  // Update inputs when moving to a new set or when previous data changes
+  useEffect(() => {
+    if (previousWeight >= 0) {
+      setWeight(previousWeight.toString())
+    } else {
+      setWeight('')
+    }
+
+    if (previousReps > 0) {
+      setReps(previousReps.toString())
+    } else if (targetReps) {
+      setReps(targetReps.toString())
+    } else {
+      setReps('')
+    }
+  }, [currentSet, previousWeight, previousReps, targetReps])
+
   const handleCompleteSet = () => {
     const weightNum = Number.parseFloat(weight) || 0
     const repsNum = Number.parseInt(reps, 10) || 0
 
 
-    if (weightNum <= 0) {
-      alert('Please enter the weight')
+    if (weightNum < 0) {
+      alert('Please enter a valid weight (cannot be negative)')
       return
     }
 
@@ -53,10 +70,6 @@ export default function SetLogger({
     }
 
     onCompleteSet(weightNum, repsNum)
-
-    // Clear inputs for next set
-    setWeight('')
-    setReps('')
 
     // Auto-collapse on mobile after completing set
     if (isMobile) {
@@ -144,7 +157,7 @@ export default function SetLogger({
           </Button>
 
           {/* Previous set info */}
-          {(previousWeight > 0 || previousReps > 0) && (
+          {(previousWeight >= 0 || previousReps > 0) && (
             <div className="text-center text-sm text-gray-400">
               Last set: {previousWeight}kg × {previousReps} reps
             </div>

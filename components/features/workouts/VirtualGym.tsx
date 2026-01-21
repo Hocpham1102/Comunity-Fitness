@@ -20,6 +20,8 @@ interface Exercise {
   difficulty: string
   videoUrl: string | null
   thumbnailUrl: string | null
+  defaultWeight: number | null
+  defaultReps: number | null
 }
 
 interface WorkoutExercise {
@@ -259,7 +261,21 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
     if (!currentExercise) return { weight: 0, reps: 0 }
 
     const prevSetKey = `${currentExercise.exerciseId}-${currentSetNumber - 1}`
-    return setData[prevSetKey] || { weight: 0, reps: 0 }
+    const prevData = setData[prevSetKey]
+
+    // For first set (no previous data), use exercise defaults
+    if (!prevData) {
+      return {
+        weight: currentExercise.exercise.defaultWeight || 0,
+        reps: currentExercise.exercise.defaultReps || currentExercise.reps || 0
+      }
+    }
+
+    // For subsequent sets, use previous set data
+    return {
+      weight: prevData.weight,
+      reps: prevData.reps
+    }
   }
 
   const handleFinishWorkout = async () => {

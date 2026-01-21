@@ -39,6 +39,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       difficulty: body.difficulty,
       videoUrl: body.videoUrl,
       thumbnailUrl: body.thumbnailUrl,
+      defaultWeight: body.defaultWeight ? parseFloat(body.defaultWeight) : null,
+      defaultReps: body.defaultReps ? parseInt(body.defaultReps, 10) : null,
     })
 
     return NextResponse.json(updated, { status: 200 })

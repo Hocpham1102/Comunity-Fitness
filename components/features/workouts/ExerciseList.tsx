@@ -168,11 +168,13 @@ export default function ExerciseList({
               />
             </div>
 
-            {/* Exercise list */}
+            {/* Exercise list with custom scrollbar */}
             <div
-              className="overflow-y-auto px-2.5 py-2 sm:px-4 sm:py-3"
+              className="overflow-y-auto px-2.5 py-2 sm:px-4 sm:py-3 exercise-list-scrollbar"
               style={{
-                maxHeight: 'min(45vh, calc(100vh - 300px))',
+                maxHeight: 'min(35vh, calc(100vh - 350px))',
+                scrollbarWidth: 'auto',
+                scrollbarColor: '#3B82F6 #1F2937'
               }}
             >
               <div className="space-y-2">
@@ -274,7 +276,14 @@ export default function ExerciseList({
   }
 
   return (
-    <div className="w-64 bg-gray-800 border-r border-gray-700 overflow-y-auto">
+    <div
+      className="w-64 bg-gray-800 border-r border-gray-700 overflow-y-auto exercise-list-scrollbar"
+      style={{
+        height: '100%',
+        scrollbarWidth: 'auto',
+        scrollbarColor: '#3B82F6 #1F2937'
+      }}
+    >
       <div className="p-4">
         <h3 className="text-lg font-semibold text-white mb-4">Exercises</h3>
 

@@ -103,9 +103,9 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
     const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
     const data = setData[setKey] || { reps: 0, weight: 0 }
 
-    // Validate weight - must be positive (not negative or zero)
-    if (!data.weight || data.weight <= 0) {
-      toast.warning('Vui lòng nhập trọng lượng hợp lệ (phải lớn hơn 0 kg)')
+    // Validate weight - must be non-negative (allow 0 for bodyweight exercises)
+    if (data.weight == null || data.weight < 0) {
+      toast.warning('Vui lòng nhập trọng lượng hợp lệ (không được âm)')
       return
     }
 
@@ -372,10 +372,10 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
                 </label>
                 <Input
                   type="number"
-                  placeholder="Enter weight"
+                  placeholder="Enter weight (0 for bodyweight)"
                   step="0.5"
-                  min="0.5"
-                  value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight || ''}
+                  min="0"
+                  value={setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight ?? ''}
                   onChange={(e) => {
                     const value = parseFloat(e.target.value)
                     const setKey = `${currentExercise.exerciseId}-${currentSetNumber}`
@@ -385,8 +385,7 @@ export default function ActiveWorkout({ workoutLog }: ActiveWorkoutProps) {
                     }))
                   }}
                   className={(
-                    setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight <= 0 ||
-                    !setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight
+                    setData[`${currentExercise.exerciseId}-${currentSetNumber}`]?.weight < 0
                   ) ? 'border-red-500' : ''}
                 />
               </div>

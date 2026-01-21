@@ -40,6 +40,8 @@ interface ExerciseFormProps {
         difficulty: string
         videoUrl?: string | null
         thumbnailUrl?: string | null
+        defaultWeight?: number | null
+        defaultReps?: number | null
     }
 }
 
@@ -55,6 +57,8 @@ export function ExerciseForm({ initialData }: ExerciseFormProps) {
         difficulty: initialData?.difficulty || 'BEGINNER',
         videoUrl: initialData?.videoUrl || '',
         thumbnailUrl: initialData?.thumbnailUrl || '',
+        defaultWeight: initialData?.defaultWeight || '',
+        defaultReps: initialData?.defaultReps || '',
     })
 
     // Helper to formatting string for display
@@ -145,6 +149,35 @@ export function ExerciseForm({ initialData }: ExerciseFormProps) {
                                 ))}
                             </SelectContent>
                         </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="defaultWeight">Default Weight (kg)</Label>
+                        <Input
+                            id="defaultWeight"
+                            type="number"
+                            step="0.5"
+                            placeholder="e.g., 20"
+                            value={formData.defaultWeight}
+                            onChange={e => setFormData({ ...formData, defaultWeight: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Suggested starting weight for this exercise
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="defaultReps">Default Reps</Label>
+                        <Input
+                            id="defaultReps"
+                            type="number"
+                            placeholder="e.g., 10"
+                            value={formData.defaultReps}
+                            onChange={e => setFormData({ ...formData, defaultReps: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Suggested rep count for this exercise
+                        </p>
                     </div>
 
                     <div className="space-y-2">

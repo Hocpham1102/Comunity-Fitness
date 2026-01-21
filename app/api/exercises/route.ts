@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
       difficulty: body.difficulty,
       videoUrl: body.videoUrl,
       thumbnailUrl: body.thumbnailUrl,
+      defaultWeight: body.defaultWeight ? parseFloat(body.defaultWeight) : null,
+      defaultReps: body.defaultReps ? parseInt(body.defaultReps, 10) : null,
     })
 
     return NextResponse.json(newExercise, { status: 201 })
