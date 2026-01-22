@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FoodSearch } from './FoodSearch'
+import { QuickMealInput } from './QuickMealInput'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -112,13 +112,15 @@ export function MealLogger({ onSuccess }: MealLoggerProps) {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Apple className="w-5 h-5 text-primary" />
-                            Select Food
+                            Search Food
                         </CardTitle>
-                        <CardDescription>Search for the food you want to log</CardDescription>
+                        <CardDescription>
+                            Enter food name - searches database and AI estimation automatically
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {!selectedFood ? (
-                            <FoodSearch onSelectFood={setSelectedFood} />
+                            <QuickMealInput onSelectFood={setSelectedFood} />
                         ) : (
                             <div className="space-y-4">
                                 <div className="flex items-start justify-between p-4 rounded-lg bg-primary/5 border-2 border-primary/20">
