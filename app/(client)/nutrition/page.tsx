@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Apple, Flame, Target, Plus, TrendingUp, Utensils, Trash2 } from "lucide-react"
+import { Apple, Flame, Target, Plus, TrendingUp, Utensils, Trash2, Settings } from "lucide-react"
 import Link from "next/link"
 import { toast } from 'sonner'
 import {
@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { NutritionTargetSettings } from '@/components/features/nutrition/NutritionTargetSettings'
 
 interface NutritionLog {
   id: string
@@ -53,15 +54,22 @@ export default function NutritionPage() {
     totalCarbs: 0,
     totalFats: 0,
   })
+  const [targets, setTargets] = useState({
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 200,
+    targetFats: 65,
+  })
   const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const dailyGoals = {
-    calories: { consumed: stats.totalCalories, target: 2200 },
-    protein: { consumed: stats.totalProtein, target: 180 },
-    carbs: { consumed: stats.totalCarbs, target: 220 },
-    fats: { consumed: stats.totalFats, target: 75 },
+    calories: { consumed: stats.totalCalories, target: targets.targetCalories },
+    protein: { consumed: stats.totalProtein, target: targets.targetProtein },
+    carbs: { consumed: stats.totalCarbs, target: targets.targetCarbs },
+    fats: { consumed: stats.totalFats, target: targets.targetFats },
   }
 
   const fetchData = async () => {
@@ -78,7 +86,16 @@ export default function NutritionPage() {
 
       if (statsRes.ok) {
         const statsData = await statsRes.json()
-        setStats(statsData)
+        setStats({
+          totalCalories: statsData.totalCalories,
+          totalProtein: statsData.totalProtein,
+          totalCarbs: statsData.totalCarbs,
+          totalFats: statsData.totalFats,
+        })
+        // Set targets from API response
+        if (statsData.targets) {
+          setTargets(statsData.targets)
+        }
       }
     } catch (error) {
       console.error('Error fetching nutrition data:', error)
@@ -165,12 +182,18 @@ export default function NutritionPage() {
             <h1 className="text-3xl font-bold mb-2">Nutrition</h1>
             <p className="text-muted-foreground">Track your meals and hit your macro goals</p>
           </div>
-          <Button size="lg" asChild>
-            <Link href="/nutrition/log">
-              <Plus className="w-5 h-5 mr-2" />
-              Log Meal
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="lg" onClick={() => setSettingsOpen(true)}>
+              <Settings className="w-5 h-5 mr-2" />
+              Targets
+            </Button>
+            <Button size="lg" asChild>
+              <Link href="/nutrition/log">
+                <Plus className="w-5 h-5 mr-2" />
+                Log Meal
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Daily Goals Overview */}
@@ -343,6 +366,14 @@ export default function NutritionPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Nutrition Target Settings Dialog */}
+      <NutritionTargetSettings
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        currentTargets={targets}
+        onUpdate={fetchData}
+      />
     </>
   )
 }

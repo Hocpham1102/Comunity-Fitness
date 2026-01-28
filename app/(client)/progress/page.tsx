@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, Award, Target, Dumbbell, Flame, Clock, Calendar } from "lucide-react"
 import Link from "next/link"
 import { headers, cookies } from "next/headers"
+import { getUserAchievementsByCategory, getAchievementStats } from "@/lib/server/services/achievement.service"
+import { AchievementCard } from "@/components/features/achievements/AchievementCard"
+import { auth } from "@/auth"
 
 async function getBaseUrl() {
   const hdrs = await headers()
@@ -35,9 +38,13 @@ async function fetchProgressStats() {
 }
 
 export default async function ProgressPage() {
-  const [historyResp, stats] = await Promise.all([
+  const session = await auth()
+
+  const [historyResp, stats, achievementStats, groupedAchievements] = await Promise.all([
     fetchWorkoutHistory(),
     fetchProgressStats(),
+    session?.user?.id ? getAchievementStats(session.user.id) : null,
+    session?.user?.id ? getUserAchievementsByCategory(session.user.id) : null,
   ])
 
   const history = Array.isArray(historyResp?.items) ? historyResp.items : []
@@ -257,43 +264,110 @@ export default async function ProgressPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-accent" />
-              Achievements
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-accent" />
+                Achievements
+              </div>
+              {achievementStats && (
+                <Badge variant="secondary">
+                  {achievementStats.unlockedAchievements} / {achievementStats.totalAchievements}
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="text-2xl">🏆</div>
-                <div>
-                  <div className="font-semibold">First Workout</div>
-                  <div className="text-sm text-muted-foreground">
-                    {statsData.totalSessions > 0 ? 'Completed!' : 'Complete your first workout'}
+            {groupedAchievements ? (
+              <div className="space-y-4">
+                {/* Achievement Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 rounded-lg bg-purple-50 dark:bg-purple-950">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {achievementStats?.totalPoints || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Points</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {achievementStats?.unlockRate || 0}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">Complete</div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="text-2xl">💪</div>
-                <div>
-                  <div className="font-semibold">10 Workouts</div>
-                  <div className="text-sm text-muted-foreground">
-                    {statsData.totalSessions >= 10 ? 'Completed!' : `${10 - statsData.totalSessions} more to go`}
-                  </div>
+                {/* Top Achievements Preview */}
+                <div className="space-y-2">
+                  {Object.values(groupedAchievements || {})
+                    .flat()
+                    .filter((a: any) => a.isUnlocked || a.progress > 0)
+                    .sort((a: any, b: any) => {
+                      // Sort: unlocked first, then by progress percentage
+                      if (a.isUnlocked !== b.isUnlocked) return a.isUnlocked ? -1 : 1;
+                      return (b.progress / b.target) - (a.progress / a.target);
+                    })
+                    .slice(0, 3)
+                    .map((achievement: any) => (
+                      <div
+                        key={achievement.id}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
+                      >
+                        <div className="text-2xl">{achievement.icon}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm truncate">
+                            {achievement.title}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {achievement.isUnlocked
+                              ? "✓ Unlocked!"
+                              : `${achievement.progress}/${achievement.target}`}
+                          </div>
+                        </div>
+                        {achievement.isUnlocked && (
+                          <Badge className="bg-green-100 text-green-800 text-xs">
+                            {achievement.tier}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="text-2xl">🔥</div>
-                <div>
-                  <div className="font-semibold">Consistency</div>
-                  <div className="text-sm text-muted-foreground">
-                    {statsData.lastWorkoutDate ? 'Keep it up!' : 'Start your streak today'}
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/achievements">View All Achievements</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <div className="text-2xl">🏆</div>
+                  <div>
+                    <div className="font-semibold">First Workout</div>
+                    <div className="text-sm text-muted-foreground">
+                      {statsData.totalSessions > 0 ? 'Completed!' : 'Complete your first workout'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <div className="text-2xl">💪</div>
+                  <div>
+                    <div className="font-semibold">10 Workouts</div>
+                    <div className="text-sm text-muted-foreground">
+                      {statsData.totalSessions >= 10 ? 'Completed!' : `${10 - statsData.totalSessions} more to go`}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <div className="text-2xl">🔥</div>
+                  <div>
+                    <div className="font-semibold">Consistency</div>
+                    <div className="text-sm text-muted-foreground">
+                      {statsData.lastWorkoutDate ? 'Keep it up!' : 'Start your streak today'}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
