@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -251,6 +252,7 @@ model Food {
   updatedAt     DateTime       @updatedAt
   mealPlanFoods MealPlanFood[]
   nutritionLogs NutritionLog[]
+  scheduledMeals ScheduledMeal[]
 
   @@index([name])
   @@index([isPublic])
@@ -567,6 +569,12 @@ enum MealType {
   POST_WORKOUT
 }
 
+enum ScheduleType {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
 enum ClientStatus {
   INVITED
   ACTIVE
@@ -645,4 +653,42 @@ model Achievement {
   @@index([userId])
   @@index([type])
   @@index([isUnlocked])
+}
+
+model MealSchedule {
+  id             String         @id @default(cuid())
+  userId         String
+  name           String
+  description    String?
+  scheduleType   ScheduleType
+  startDate      DateTime
+  endDate        DateTime?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  scheduledMeals ScheduledMeal[]
+  
+  @@index([userId])
+  @@index([scheduleType])
+  @@index([isActive])
+}
+
+model ScheduledMeal {
+  id             String       @id @default(cuid())
+  scheduleId     String
+  foodId         String
+  mealType       MealType
+  scheduledDate  DateTime
+  quantity       Float
+  notes          String?
+  isCompleted    Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  schedule       MealSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  food           Food         @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  
+  @@index([scheduleId])
+  @@index([foodId])
+  @@index([scheduledDate])
 }

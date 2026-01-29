@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Apple, Flame, Target, Plus, TrendingUp, Utensils, Trash2, Settings } from "lucide-react"
+import { Apple, Flame, Target, Plus, TrendingUp, Utensils, Trash2, Settings, CalendarDays, Check } from "lucide-react"
 import Link from "next/link"
 import { toast } from 'sonner'
 import {
@@ -37,6 +37,28 @@ interface NutritionLog {
   }
 }
 
+interface ScheduledMeal {
+  id: string
+  foodId: string
+  mealType: string
+  scheduledDate: string
+  quantity: number
+  notes?: string
+  isCompleted: boolean
+  food: {
+    id: string
+    name: string
+    calories: number
+    protein: number
+    carbs: number
+    fats: number
+  }
+  schedule: {
+    id: string
+    name: string
+  }
+}
+
 const MEAL_TYPE_LABELS: Record<string, string> = {
   BREAKFAST: 'Breakfast',
   LUNCH: 'Lunch',
@@ -64,6 +86,10 @@ export default function NutritionPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [scheduledMeals, setScheduledMeals] = useState<ScheduledMeal[]>([])
+  const [completingId, setCompletingId] = useState<string | null>(null)
+  const [deleteScheduledId, setDeleteScheduledId] = useState<string | null>(null)
+  const [deletingScheduled, setDeletingScheduled] = useState(false)
 
   const dailyGoals = {
     calories: { consumed: stats.totalCalories, target: targets.targetCalories },
@@ -74,9 +100,10 @@ export default function NutritionPage() {
 
   const fetchData = async () => {
     try {
-      const [logsRes, statsRes] = await Promise.all([
+      const [logsRes, statsRes, scheduledRes] = await Promise.all([
         fetch('/api/nutrition-logs'),
         fetch('/api/nutrition-logs/stats'),
+        fetch('/api/meal-schedules/today'),
       ])
 
       if (logsRes.ok) {
@@ -96,6 +123,11 @@ export default function NutritionPage() {
         if (statsData.targets) {
           setTargets(statsData.targets)
         }
+      }
+
+      if (scheduledRes.ok) {
+        const scheduledData = await scheduledRes.json()
+        setScheduledMeals(scheduledData)
       }
     } catch (error) {
       console.error('Error fetching nutrition data:', error)
@@ -129,6 +161,58 @@ export default function NutritionPage() {
     } finally {
       setDeleting(false)
       setDeleteId(null)
+    }
+  }
+
+  const handleComplete = async (mealId: string) => {
+    setCompletingId(mealId)
+    try {
+      const response = await fetch(`/api/scheduled-meals/${mealId}/complete`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to complete')
+      }
+
+      toast.success('Đã hoàn thành bữa ăn!')
+      fetchData() // Refresh both scheduled meals and nutrition logs
+    } catch (error: any) {
+      console.error('Error completing meal:', error)
+      toast.error(error.message || 'Không thể hoàn thành bữa ăn')
+    } finally {
+      setCompletingId(null)
+    }
+  }
+
+  const handleDeleteScheduled = async () => {
+    if (!deleteScheduledId) return
+
+    setDeletingScheduled(true)
+    try {
+      // Find the meal to get its schedule ID
+      const meal = scheduledMeals.find(m => m.id === deleteScheduledId)
+      if (!meal) {
+        throw new Error('Meal not found')
+      }
+
+      const response = await fetch(`/api/meal-schedules/${meal.schedule.id}/meals/${deleteScheduledId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete')
+      }
+
+      toast.success('Đã xóa bữa ăn khỏi lịch')
+      fetchData()
+    } catch (error) {
+      console.error('Error deleting scheduled meal:', error)
+      toast.error('Không thể xóa bữa ăn')
+    } finally {
+      setDeletingScheduled(false)
+      setDeleteScheduledId(null)
     }
   }
 
@@ -197,7 +281,7 @@ export default function NutritionPage() {
         </div>
 
         {/* Daily Goals Overview */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -292,6 +376,41 @@ export default function NutritionPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Meal Schedule Card */}
+          <Card className="md:col-span-2 lg:col-span-1 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-primary" />
+                Lịch Bữa Ăn
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Lên kế hoạch bữa ăn theo tuần, tháng hoặc năm. Tạo lịch thực đơn chi tiết và theo dõi tiến độ.
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span>Tạo lịch thực đơn</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 rounded-full bg-secondary" />
+                  <span>Xem lịch dạng calendar</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 rounded-full bg-accent" />
+                  <span>Theo dõi tiến độ</span>
+                </div>
+              </div>
+              <Button className="w-full mt-4" size="lg" asChild>
+                <Link href="/nutrition/schedule">
+                  <CalendarDays className="w-4 h-4 mr-2" />
+                  Xem Lịch
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Today's Meals */}
@@ -348,7 +467,115 @@ export default function NutritionPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+
+        {/* Today's Scheduled Meals */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-primary" />
+                Bữa Ăn Đã Lên Lịch Hôm Nay
+              </CardTitle>
+              <Badge variant="secondary">
+                {scheduledMeals.filter(m => !m.isCompleted).length} chưa hoàn thành
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {scheduledMeals.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Không có bữa ăn nào được lên lịch cho hôm nay</p>
+                <p className="text-sm mt-2">Truy cập <Link href="/nutrition/schedule" className="text-primary hover:underline">Lịch Bữa Ăn</Link> để tạo lịch</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {scheduledMeals.map((meal) => {
+                  const multiplier = meal.quantity / 100
+                  const calculatedCals = (meal.food.calories * multiplier).toFixed(0)
+                  const calculatedProtein = (meal.food.protein * multiplier).toFixed(1)
+                  const calculatedCarbs = (meal.food.carbs * multiplier).toFixed(1)
+                  const calculatedFats = (meal.food.fats * multiplier).toFixed(1)
+
+                  return (
+                    <div
+                      key={meal.id}
+                      className={`p-4 rounded-lg border ${meal.isCompleted
+                        ? 'bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-900 opacity-60'
+                        : 'bg-card hover:bg-muted/50'
+                        } transition-colors`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          {/* Badge: Meal Type + Completed Status */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs">
+                              {MEAL_TYPE_LABELS[meal.mealType] || meal.mealType}
+                            </Badge>
+                            {meal.isCompleted && (
+                              <Badge variant="outline" className="bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 text-xs">
+                                <Check className="w-3 h-3 mr-1" />
+                                Đã hoàn thành
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Food Name + From Schedule */}
+                          <div className="font-semibold">{meal.food.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Từ lịch: {meal.schedule.name}
+                          </div>
+
+                          {/* Quantity */}
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {meal.quantity}g
+                          </div>
+
+                          {/* Notes */}
+                          {meal.notes && (
+                            <div className="text-sm text-muted-foreground italic mt-1">
+                              {meal.notes}
+                            </div>
+                          )}
+
+                          {/* Macros */}
+                          <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                            <span>{calculatedCals} cal</span>
+                            <span>P: {calculatedProtein}g</span>
+                            <span>C: {calculatedCarbs}g</span>
+                            <span>F: {calculatedFats}g</span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          {!meal.isCompleted && (
+                            <Button
+                              onClick={() => handleComplete(meal.id)}
+                              disabled={completingId === meal.id}
+                              size="sm"
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              {completingId === meal.id ? 'Đang xử lý...' : 'Hoàn thành'}
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteScheduledId(meal.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div >
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
@@ -366,6 +593,25 @@ export default function NutritionPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Scheduled Meal Delete Confirmation */}
+      <AlertDialog open={!!deleteScheduledId} onOpenChange={(open) => !open && setDeleteScheduledId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa Bữa Ăn Khỏi Lịch</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa bữa ăn này khỏi lịch không? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingScheduled}>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteScheduled} disabled={deletingScheduled}>
+              {deletingScheduled ? 'Đang xóa...' : 'Xóa bữa ăn'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Nutrition Target Settings Dialog */}
       <NutritionTargetSettings
