@@ -8,6 +8,7 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const isAdmin = auth?.user?.role === 'ADMIN'
+      const isTrainer = auth?.user?.role === 'TRAINER'
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard')
       const isOnAdmin = nextUrl.pathname.startsWith('/admin')
       const isOnSettings = nextUrl.pathname.startsWith('/settings')
@@ -15,7 +16,7 @@ export const authConfig = {
       const isOnWorkouts = nextUrl.pathname.startsWith('/workouts')
       const isOnNutrition = nextUrl.pathname.startsWith('/nutrition')
       const isOnProgress = nextUrl.pathname.startsWith('/progress')
-      const isOnTrainer = nextUrl.pathname === '/trainer' || nextUrl.pathname.startsWith('/trainer/')
+      const isOnTrainerDashboard = nextUrl.pathname.startsWith('/trainer')
       const isOnPublic = nextUrl.pathname.startsWith('/') && !nextUrl.pathname.startsWith('/api')
       const isOnLogin = nextUrl.pathname === '/login'
 
@@ -24,8 +25,13 @@ export const authConfig = {
         return Response.redirect(new URL('/admin', nextUrl))
       }
 
+      // Redirect trainers from login to /trainer/dashboard
+      if (isOnLogin && isLoggedIn && isTrainer) {
+        return Response.redirect(new URL('/trainer/dashboard', nextUrl))
+      }
+
       // Redirect regular users from login to /dashboard
-      if (isOnLogin && isLoggedIn && !isAdmin) {
+      if (isOnLogin && isLoggedIn && !isAdmin && !isTrainer) {
         return Response.redirect(new URL('/dashboard', nextUrl))
       }
 
@@ -37,14 +43,21 @@ export const authConfig = {
         isOnWorkouts || isOnNutrition || isOnProgress
 
       // Allow public routes (including /trainers directory)
-      if (isOnPublic && !isProtectedRoute && !isOnAdmin && !isOnTrainer) {
+      if (isOnPublic && !isProtectedRoute && !isOnAdmin && !isOnTrainerDashboard) {
         return true
       }
 
-      // Protected routes require authentication
+      // Protected user routes - trainers should NOT access these
       if (isProtectedRoute) {
-        if (isLoggedIn) return true
-        return false // Redirect to login
+        if (!isLoggedIn) return false // Redirect to login
+
+        // Redirect trainers to their dashboard if they try to access user routes
+        if (isTrainer) {
+          return Response.redirect(new URL('/trainer/dashboard', nextUrl))
+        }
+
+        // Allow regular users and admins
+        return true
       }
 
       // Admin routes require admin role
@@ -56,9 +69,11 @@ export const authConfig = {
       }
 
       // Trainer routes require trainer or admin role
-      if (isOnTrainer) {
-        if (isLoggedIn && (auth?.user?.role === 'TRAINER' || isAdmin)) return true
-        return false // Redirect to dashboard
+      if (isOnTrainerDashboard) {
+        if (isLoggedIn && (isTrainer || isAdmin)) return true
+        // Redirect non-trainers to their appropriate dashboard
+        if (isLoggedIn) return Response.redirect(new URL('/dashboard', nextUrl))
+        return false // Redirect to login
       }
 
       return true

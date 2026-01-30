@@ -7,7 +7,7 @@ async function main() {
     console.log('🌱 Seeding users...')
 
     // Hash password for all accounts
-    const hashedPassword = await bcrypt.hash('admin@123', 10)
+    const hashedPassword = await bcrypt.hash('admin123', 10)
 
     // Create Admin Account
     const admin = await prisma.user.upsert({
