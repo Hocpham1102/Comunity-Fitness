@@ -58,8 +58,8 @@ async function connectWithRetry() {
   isConnecting = false
 }
 
-// Don't auto-connect on startup to avoid blocking - let first request trigger connection
-// connectWithRetry()
+// Auto-connect on startup to verify connection status (requested by user)
+connectWithRetry()
 
 // Graceful shutdown
 if (process.env.NODE_ENV !== 'production') {
