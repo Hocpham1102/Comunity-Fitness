@@ -115,7 +115,7 @@ export default function TrainerDashboard() {
                             </Link>
                         </Button>
                         <Button asChild variant="outline" className="h-auto py-4 flex-col gap-2">
-                            <Link href="/trainer/nutrition/create">
+                            <Link href="/trainer/meal-plans/new">
                                 <Apple className="w-6 h-6" />
                                 <span>Create Meal Plan</span>
                             </Link>

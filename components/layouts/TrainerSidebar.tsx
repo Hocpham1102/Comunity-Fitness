@@ -15,12 +15,14 @@ import {
     BarChart3,
     User,
     X,
+    Activity,
 } from 'lucide-react'
 
 const navigation = [
     { name: 'Dashboard', href: '/trainer/dashboard', icon: Home },
     { name: 'My Clients', href: '/trainer/clients', icon: Users },
     { name: 'Workout Templates', href: '/trainer/workouts', icon: Dumbbell },
+    { name: 'My Exercises', href: '/trainer/exercises', icon: Activity },
     { name: 'Meal Plans', href: '/trainer/nutrition', icon: Apple },
     { name: 'My Courses', href: '/trainer/courses', icon: BookOpen },
     { name: 'Analytics', href: '/trainer/analytics', icon: BarChart3 },

@@ -26,8 +26,8 @@ export interface AuthUser {
 
 export async function createWorkout(userId: string, data: CreateWorkoutData, userRole?: string) {
   // Auto-set isTemplate based on user role
-  // Only admins can create templates, regular users create custom workouts
-  const isTemplate = userRole === 'ADMIN'
+  // Admins and Trainers can create templates, regular users create custom workouts
+  const isTemplate = userRole === 'ADMIN' || userRole === 'TRAINER'
 
   const created = await db.$transaction(async (tx) => {
     const workout = await tx.workout.create({
@@ -120,16 +120,18 @@ export async function listWorkouts(params: ListWorkoutsParams, user?: AuthUser) 
     where.isTemplate = params.isTemplate
   }
 
-  if (params.isPublic === true) {
-    where.isPublic = true
-  }
-
   if (params.mine && user?.id) {
-    // mine=true means include user's own items in addition to public ones
-    where.OR = [{ createdById: user.id }, { isPublic: true }]
+    // mine=true means ONLY user's own items
+    where.createdById = user.id
   } else if (!user?.id) {
     // unauthenticated: only public
     where.isPublic = true
+  } else if (params.isPublic === true) {
+    // Authenticated but asking for public
+    where.isPublic = true
+  } else if (!params.mine) {
+    // Default authenticated behavior: public OR own
+    where.OR = [{ createdById: user.id }, { isPublic: true }]
   }
 
   const [items, total] = await Promise.all([
@@ -152,7 +154,7 @@ export async function listWorkouts(params: ListWorkoutsParams, user?: AuthUser) 
     db.workout.count({ where }),
   ])
 
-  return { items, total, page, pageSize }
+  return { data: items, total, page, pageSize }
 }
 
 export async function getWorkoutById(id: string, user?: AuthUser) {
@@ -174,16 +176,18 @@ export async function getWorkoutById(id: string, user?: AuthUser) {
   return null
 }
 
-export async function updateWorkout(id: string, data: UpdateWorkoutData, user: AuthUser) {
+// Update workout
+export async function updateWorkout(id: string, data: Omit<UpdateWorkoutData, 'id'>, user: AuthUser) {
   const existing = await db.workout.findUnique({ where: { id } })
   if (!existing) return null
 
   const isOwner = existing.createdById === user.id
   const isAdmin = user.role === 'ADMIN'
+  const isTrainer = user.role === 'TRAINER'
 
-  // Protection: Only admins can edit templates
-  if (existing.isTemplate && !isAdmin) {
-    return null // Non-admin users cannot edit templates
+  // Protection: Only admins and trainers (who own the template) can edit templates
+  if (existing.isTemplate && !isAdmin && !(isTrainer && isOwner)) {
+    return null // Non-admin/non-owner trainers cannot edit templates
   }
 
   // Regular authorization: must be owner or admin

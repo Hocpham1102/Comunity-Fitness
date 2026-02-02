@@ -8,12 +8,14 @@ import {
     Users,
     Dumbbell,
     BarChart3,
+    Activity,
 } from 'lucide-react'
 
 const navigation = [
     { name: 'Dashboard', href: '/trainer/dashboard', icon: Home },
     { name: 'Clients', href: '/trainer/clients', icon: Users },
     { name: 'Workouts', href: '/trainer/workouts', icon: Dumbbell },
+    { name: 'Exercises', href: '/trainer/exercises', icon: Activity },
     { name: 'Analytics', href: '/trainer/analytics', icon: BarChart3 },
 ]
 

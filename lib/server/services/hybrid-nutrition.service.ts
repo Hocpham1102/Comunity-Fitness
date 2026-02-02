@@ -90,6 +90,9 @@ export async function searchFoodNutrition(query: string): Promise<NutritionResul
                     isPublic: true,
                 })
 
+                console.log(`[Hybrid Search] ✅ Successfully saved AI estimate to database with ID: ${savedFood.id}`)
+                console.log(`[Hybrid Search] Food name in DB: "${savedFood.name}"`)
+
                 results.push({
                     id: savedFood.id,
                     name: savedFood.name,
@@ -108,6 +111,7 @@ export async function searchFoodNutrition(query: string): Promise<NutritionResul
                 })
             } catch (error) {
                 console.error('[Hybrid Search] Error saving AI estimate to database:', error)
+                console.error('[Hybrid Search] Error details:', JSON.stringify(error, null, 2))
                 // Still add to results even if save failed
                 results.push({
                     ...aiEstimate,

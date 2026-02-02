@@ -9,30 +9,32 @@ datasource db {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  name              String?
-  email             String             @unique
-  emailVerified     DateTime?
-  image             String?
-  password          String?
-  role              Role               @default(USER)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  phoneNumber       String?
-  accounts          Account[]
-  createdCourses    Course[]
-  courseEnrollments CourseEnrollment[]
-  nutritionLogs     NutritionLog[]
-  profile           Profile?
-  purchases         Purchase[]
-  reviews           Review[]
-  sessions          Session[]
-  subscriptions     Subscription[]
-  assignedTrainers  TrainerClient[]    @relation("ClientToTrainers")
-  assignedClients   TrainerClient[]    @relation("TrainerToClients")
-  trainerProfile    TrainerProfile?
-  createdWorkouts   Workout[]          @relation("WorkoutCreator")
-  workoutLogs       WorkoutLog[]
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String              @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String?
+  role               Role                @default(USER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  phoneNumber        String?
+  accounts           Account[]
+  createdCourses     Course[]
+  courseEnrollments  CourseEnrollment[]
+  nutritionLogs      NutritionLog[]
+  profile            Profile?
+  purchases          Purchase[]
+  reviews            Review[]
+  sessions           Session[]
+  subscriptions      Subscription[]
+  assignedTrainers   TrainerClient[]     @relation("ClientToTrainers")
+  assignedClients    TrainerClient[]     @relation("TrainerToClients")
+  assignedWorkouts   WorkoutAssignment[] @relation("AssignedWorkouts")
+  trainerAssignments WorkoutAssignment[] @relation("TrainerAssignments")
+  trainerProfile     TrainerProfile?
+  createdWorkouts    Workout[]           @relation("WorkoutCreator")
+  workoutLogs        WorkoutLog[]
 
   @@index([email])
   @@index([role])
@@ -138,27 +140,34 @@ model Exercise {
   updatedAt        DateTime          @updatedAt
   defaultReps      Int?
   defaultWeight    Float?
+  approvalStatus   ApprovalStatus    @default(APPROVED)
+  rejectionReason  String?
+  approvedAt       DateTime?
+  approvedById     String?
   exerciseLogs     ExerciseLog[]
   workoutExercises WorkoutExercise[]
 
   @@index([name])
   @@index([isPublic])
+  @@index([approvalStatus])
+  @@index([createdById])
 }
 
 model Workout {
-  id            String            @id @default(cuid())
+  id            String              @id @default(cuid())
   name          String
   description   String?
-  difficulty    DifficultyLevel   @default(BEGINNER)
+  difficulty    DifficultyLevel     @default(BEGINNER)
   estimatedTime Int?
-  isTemplate    Boolean           @default(true)
-  isPublic      Boolean           @default(true)
+  isTemplate    Boolean             @default(true)
+  isPublic      Boolean             @default(true)
   createdById   String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  createdBy     User?             @relation("WorkoutCreator", fields: [createdById], references: [id])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  createdBy     User?               @relation("WorkoutCreator", fields: [createdById], references: [id])
   exercises     WorkoutExercise[]
   workoutLogs   WorkoutLog[]
+  assignments   WorkoutAssignment[]
 
   @@index([isPublic])
   @@index([isTemplate])
@@ -235,23 +244,23 @@ model SetLog {
 }
 
 model Food {
-  id            String         @id @default(cuid())
-  name          String
-  description   String?
-  calories      Float
-  protein       Float
-  carbs         Float
-  fats          Float
-  fiber         Float?
-  sugar         Float?
-  servingSize   Float?
-  servingUnit   String?
-  isPublic      Boolean        @default(true)
-  createdById   String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  mealPlanFoods MealPlanFood[]
-  nutritionLogs NutritionLog[]
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  calories       Float
+  protein        Float
+  carbs          Float
+  fats           Float
+  fiber          Float?
+  sugar          Float?
+  servingSize    Float?
+  servingUnit    String?
+  isPublic       Boolean         @default(true)
+  createdById    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  mealPlanFoods  MealPlanFood[]
+  nutritionLogs  NutritionLog[]
   scheduledMeals ScheduledMeal[]
 
   @@index([name])
@@ -266,6 +275,7 @@ model MealPlan {
   targetProtein  Float?
   targetCarbs    Float?
   targetFats     Float?
+  cycleDays      Int            @default(7) // Number of days in the cycle (7 for weekly, 14/28/30 for longer cycles)
   isTemplate     Boolean        @default(true)
   isPublic       Boolean        @default(true)
   createdById    String?
@@ -282,6 +292,7 @@ model MealPlanFood {
   foodId     String
   mealType   MealType
   quantity   Float
+  dayOfCycle Int      @default(1) // Day number in the meal plan cycle (1-7 for weekly, 1-30 for monthly)
   order      Int?
   createdAt  DateTime @default(now())
   food       Food     @relation(fields: [foodId], references: [id], onDelete: Cascade)
@@ -350,6 +361,23 @@ model TrainerClient {
   @@index([trainerId])
   @@index([clientId])
   @@index([status])
+}
+
+model WorkoutAssignment {
+  id         String   @id @default(cuid())
+  workoutId  String
+  clientId   String
+  trainerId  String
+  assignedAt DateTime @default(now())
+  notes      String?
+  workout    Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  client     User     @relation("AssignedWorkouts", fields: [clientId], references: [id], onDelete: Cascade)
+  trainer    User     @relation("TrainerAssignments", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@unique([workoutId, clientId])
+  @@index([clientId])
+  @@index([trainerId])
+  @@index([workoutId])
 }
 
 model Course {
@@ -486,6 +514,12 @@ enum Role {
   USER
   TRAINER
   ADMIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum CourseCategory {
@@ -656,38 +690,38 @@ model Achievement {
 }
 
 model MealSchedule {
-  id             String         @id @default(cuid())
+  id             String          @id @default(cuid())
   userId         String
   name           String
   description    String?
   scheduleType   ScheduleType
   startDate      DateTime
   endDate        DateTime?
-  isActive       Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   scheduledMeals ScheduledMeal[]
-  
+
   @@index([userId])
   @@index([scheduleType])
   @@index([isActive])
 }
 
 model ScheduledMeal {
-  id             String       @id @default(cuid())
-  scheduleId     String
-  foodId         String
-  mealType       MealType
-  scheduledDate  DateTime
-  quantity       Float
-  notes          String?
-  isCompleted    Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  
-  schedule       MealSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  food           Food         @relation(fields: [foodId], references: [id], onDelete: Cascade)
-  
+  id            String   @id @default(cuid())
+  scheduleId    String
+  foodId        String
+  mealType      MealType
+  scheduledDate DateTime
+  quantity      Float
+  notes         String?
+  isCompleted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schedule MealSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  food     Food         @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
   @@index([scheduleId])
   @@index([foodId])
   @@index([scheduledDate])
