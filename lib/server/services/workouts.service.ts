@@ -154,7 +154,7 @@ export async function listWorkouts(params: ListWorkoutsParams, user?: AuthUser) 
     db.workout.count({ where }),
   ])
 
-  return { data: items, total, page, pageSize }
+  return { items, total, page, pageSize }
 }
 
 export async function getWorkoutById(id: string, user?: AuthUser) {

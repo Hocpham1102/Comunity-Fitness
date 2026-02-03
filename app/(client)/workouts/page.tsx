@@ -25,7 +25,7 @@ export default async function WorkoutsPage({ searchParams }: WorkoutsPageProps) 
 
   // Build query string from search params
   const queryParams = new URLSearchParams()
-  queryParams.set('mine', 'true')
+
   queryParams.set('pageSize', '6') // 6 items per page
 
   // Pagination

@@ -43,10 +43,10 @@ export default function WorkoutStartPage({ params }: { params: Promise<Params> }
         setWorkout(workoutData)
 
         // Fetch templates
-        const templatesRes = await fetch('/api/workouts?mine=true&pageSize=12')
+        const templatesRes = await fetch('/api/workouts?pageSize=12')
         if (templatesRes.ok) {
           const templatesData = await templatesRes.json()
-          setTemplates(Array.isArray(templatesData?.items) ? templatesData.items : [])
+          setTemplates(Array.isArray(templatesData?.items) ? templatesData.items.filter((t: any) => t.id !== workoutId) : [])
         }
 
         // Check for existing incomplete log
@@ -169,8 +169,36 @@ export default function WorkoutStartPage({ params }: { params: Promise<Params> }
           </p>
         </div>
 
+        {/* Exercises List */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Workout Exercises</h2>
+          <div className="grid gap-4">
+            {workout.exercises?.map((item: any, index: number) => (
+              <div key={item.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold shrink-0">
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium">{item.exercise.name}</h3>
+                  <div className="text-sm text-muted-foreground mt-1 space-x-3">
+                    {item.sets && <span>{item.sets} sets</span>}
+                    {item.reps && <span>{item.reps} reps</span>}
+                    {item.duration && <span>{item.duration}s</span>}
+                    {item.rest && <span>{item.rest}s rest</span>}
+                  </div>
+                  {item.notes && (
+                    <p className="text-sm text-muted-foreground mt-2 italic">
+                      "{item.notes}"
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Templates Section */}
-        <section className="space-y-4">
+        <section className="space-y-4 pt-8 border-t">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Other Templates</h2>
             <span className="text-sm text-muted-foreground">{templates.length} templates</span>

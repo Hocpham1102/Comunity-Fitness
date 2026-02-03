@@ -42,15 +42,17 @@ export default function ResumeWorkoutDialog({
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Resume Workout?</AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-2">
-                        <div>
-                            You have an in-progress session for <strong>{workoutTitle}</strong>.
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            Last updated: {formatLastUpdated(lastUpdated)}
-                        </div>
-                        <div>
-                            Would you like to continue where you left off or start fresh?
+                    <AlertDialogDescription asChild>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                            <p>
+                                You have an in-progress session for <strong>{workoutTitle}</strong>.
+                            </p>
+                            <p>
+                                Last updated: {formatLastUpdated(lastUpdated)}
+                            </p>
+                            <p>
+                                Would you like to continue where you left off or start fresh?
+                            </p>
                         </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>

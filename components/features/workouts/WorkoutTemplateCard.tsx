@@ -13,17 +13,30 @@ interface WorkoutTemplateCardProps {
 export default function WorkoutTemplateCard({ id, name, difficulty, estimatedTime, exercisesCount }: WorkoutTemplateCardProps) {
   return (
     <Link href={`/workouts/${id}/start`}>
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-sm line-clamp-2">{name}</h3>
-            {difficulty && (
-              <Badge variant="secondary" className="text-xs">{difficulty}</Badge>
-            )}
+      <Card className="h-full hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 cursor-pointer group">
+        <CardContent className="p-5 flex flex-col h-full justify-between">
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
+                {name}
+              </h3>
+              {difficulty && (
+                <Badge variant={difficulty === 'BEGINNER' ? 'secondary' : 'outline'} className="text-[10px] shrink-0 uppercase tracking-wider">
+                  {difficulty}
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{exercisesCount ?? 0} exercises</span>
-            {estimatedTime ? <span>{estimatedTime} min</span> : null}
+
+          <div className="mt-4 pt-4 border-t flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <div className="flex items-center gap-1">
+              <span>⚡ {exercisesCount ?? 0} exercises</span>
+            </div>
+            {estimatedTime ? (
+              <div className="flex items-center gap-1">
+                <span>⏱️ {estimatedTime} min</span>
+              </div>
+            ) : null}
           </div>
         </CardContent>
       </Card>

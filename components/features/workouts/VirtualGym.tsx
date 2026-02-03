@@ -216,8 +216,26 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
 
         // Move to next exercise
         if (currentExerciseIndex < totalExercises - 1) {
+          // Trigger rest before next exercise
+          const restSeconds = currentExercise.rest || 60
+          const restUntil = new Date(Date.now() + restSeconds * 1000)
+
+          await fetch(`/api/workout-logs/${workoutLog.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              currentExerciseOrder: currentExerciseIndex + 1,
+              currentSetNumber: 1,
+              restUntil: restUntil.toISOString(),
+            }),
+          })
+
           setCurrentExerciseIndex(prev => prev + 1)
           setCurrentSetNumber(1)
+          setRestTimeLeft(restSeconds)
+          setIsResting(true)
+          setIsPaused(false)
+          toast.success('Exercise complete! Rest before the next one.')
         } else {
           // Workout complete
           console.log('🎉 Workout complete - last set of last exercise!')
@@ -288,7 +306,7 @@ export default function VirtualGym({ workoutLog }: VirtualGymProps) {
 
       toast.success('Workout completed successfully!')
       // Redirect to workouts page
-      window.location.href = '/workouts'
+      window.location.href = '/progress'
     } catch (error) {
       toast.error('Failed to complete workout')
       console.error(error)

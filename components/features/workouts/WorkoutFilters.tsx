@@ -39,9 +39,10 @@ export default function WorkoutFilters() {
         })
 
         // Always keep mine=true to show user's workouts
-        if (!params.has('mine')) {
-            params.set('mine', 'true')
-        }
+        // REMOVED: forcing mine=true. We want to allow viewing all templates by default.
+        // if (!params.has('mine')) {
+        //     params.set('mine', 'true')
+        // }
 
         router.push(`?${params.toString()}`, { scroll: false })
     }, [searchParams, router])
@@ -66,7 +67,7 @@ export default function WorkoutFilters() {
         setDifficulty('')
         setTimeLimit('')
         setWorkoutType('')
-        router.push('?mine=true', { scroll: false })
+        router.push('?', { scroll: false })
     }
 
     const hasActiveFilters = searchQuery || difficulty || timeLimit || workoutType
