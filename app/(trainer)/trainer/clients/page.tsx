@@ -107,9 +107,9 @@ export default function ClientsPage() {
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold">Khách Hàng Của Tôi</h1>
+                        <h1 className="text-3xl font-bold">My Clients</h1>
                         <p className="text-muted-foreground mt-2">
-                            Quản lý và theo dõi khách hàng
+                            Manage and track your clients
                         </p>
                     </div>
                 </div>
@@ -141,8 +141,8 @@ export default function ClientsPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>Tìm Kiếm & Lọc</CardTitle>
-                            <CardDescription>Tìm và lọc khách hàng theo tiêu chí</CardDescription>
+                            <CardTitle>Search & Filter</CardTitle>
+                            <CardDescription>Find and filter clients by criteria</CardDescription>
                         </div>
                         {filteredAndSortedClients.length > 0 && (
                             <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ export default function ClientsPage() {
                         <div className="relative md:col-span-1">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                             <Input
-                                placeholder="Tìm theo tên hoặc email..."
+                                placeholder="Search by name or email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10"
@@ -174,14 +174,14 @@ export default function ClientsPage() {
                         <div>
                             <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Lọc theo trạng thái" />
+                                    <SelectValue placeholder="Filter by status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
-                                    <SelectItem value="INVITED">Đã mời</SelectItem>
-                                    <SelectItem value="ACTIVE">Đang hoạt động</SelectItem>
-                                    <SelectItem value="INACTIVE">Tạm ngưng</SelectItem>
-                                    <SelectItem value="CANCELLED">Đã hủy</SelectItem>
+                                    <SelectItem value="ALL">All statuses</SelectItem>
+                                    <SelectItem value="INVITED">Invited</SelectItem>
+                                    <SelectItem value="ACTIVE">Active</SelectItem>
+                                    <SelectItem value="INACTIVE">Inactive</SelectItem>
+                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -193,9 +193,9 @@ export default function ClientsPage() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="name">Tên</SelectItem>
-                                    <SelectItem value="startDate">Ngày bắt đầu</SelectItem>
-                                    <SelectItem value="lastActivity">Hoạt động gần nhất</SelectItem>
+                                    <SelectItem value="name">Name</SelectItem>
+                                    <SelectItem value="startDate">Start date</SelectItem>
+                                    <SelectItem value="lastActivity">Last activity</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Button
@@ -216,17 +216,17 @@ export default function ClientsPage() {
                     <CardContent className="py-12">
                         <div className="text-center">
                             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">Không tìm thấy khách hàng</h3>
+                            <h3 className="text-lg font-semibold mb-2">No clients found</h3>
                             <p className="text-muted-foreground mb-4">
                                 {searchQuery || statusFilter !== 'ALL'
-                                    ? 'Thử điều chỉnh bộ lọc của bạn'
-                                    : 'Bắt đầu bằng cách mời khách hàng đầu tiên'}
+                                    ? 'Try adjusting your filters'
+                                    : 'Start by inviting your first client'}
                             </p>
                             {!searchQuery && statusFilter === 'ALL' && (
                                 <Button asChild>
                                     <Link href="/trainer/clients/invite">
                                         <UserPlus className="w-4 h-4 mr-2" />
-                                        Mời Khách Hàng
+                                        Invite Client
                                     </Link>
                                 </Button>
                             )}

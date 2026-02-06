@@ -107,8 +107,8 @@ export default function ClientDetailPage() {
 
             if (response.ok) {
                 toast({
-                    title: 'Đã cập nhật',
-                    description: 'Trạng thái khách hàng đã được cập nhật',
+                    title: 'Updated',
+                    description: 'Client status has been updated',
                 })
                 // Refresh data
                 const refreshResponse = await fetch(`/api/trainer/clients/${params.clientId}`)
@@ -118,16 +118,16 @@ export default function ClientDetailPage() {
                 }
             } else {
                 toast({
-                    title: 'Lỗi',
-                    description: 'Không thể cập nhật trạng thái',
+                    title: 'Error',
+                    description: 'Unable to update status',
                     variant: 'destructive',
                 })
             }
         } catch (error) {
             console.error('Error updating status:', error)
             toast({
-                title: 'Lỗi',
-                description: 'Đã xảy ra lỗi khi cập nhật',
+                title: 'Error',
+                description: 'An error occurred while updating',
                 variant: 'destructive',
             })
         }
@@ -218,8 +218,8 @@ export default function ClientDetailPage() {
                     {/* Status Management */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Quản Lý Trạng Thái</CardTitle>
-                            <CardDescription>Cập nhật trạng thái của khách hàng</CardDescription>
+                            <CardTitle>Status Management</CardTitle>
+                            <CardDescription>Update client status</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-4">
@@ -385,8 +385,8 @@ export default function ClientDetailPage() {
                         {/* Recent Logs */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Nhật Ký Dinh Dưỡng Gần Đây</CardTitle>
-                                <CardDescription>Các bữa ăn đã ghi nhận</CardDescription>
+                                <CardTitle>Recent Nutrition Logs</CardTitle>
+                                <CardDescription>Last 7 days</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {client.nutritionLogs && client.nutritionLogs.length > 0 ? (
@@ -410,7 +410,7 @@ export default function ClientDetailPage() {
                                     </div>
                                 ) : (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Chưa có nhật ký dinh dưỡng
+                                        No nutrition logs yet
                                     </p>
                                 )}
                             </CardContent>

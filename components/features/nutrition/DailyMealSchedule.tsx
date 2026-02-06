@@ -44,12 +44,12 @@ interface DailyMealScheduleProps {
 }
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
-    BREAKFAST: 'Bữa Sáng',
-    LUNCH: 'Bữa Trưa',
-    DINNER: 'Bữa Tối',
+    BREAKFAST: 'Breakfast',
+    LUNCH: 'Lunch',
+    DINNER: 'Dinner',
     SNACK: 'Snack',
-    PRE_WORKOUT: 'Trước Tập',
-    POST_WORKOUT: 'Sau Tập',
+    PRE_WORKOUT: 'Pre-Workout',
+    POST_WORKOUT: 'Post-Workout',
 }
 
 const MEAL_TYPE_ORDER = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'PRE_WORKOUT', 'POST_WORKOUT']
@@ -71,11 +71,11 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
                 throw new Error('Failed to delete')
             }
 
-            toast.success('Đã xóa bữa ăn')
+            toast.success('Meal deleted')
             onRefresh()
         } catch (error) {
             console.error('Error deleting meal:', error)
-            toast.error('Không thể xóa bữa ăn')
+            toast.error('Unable to delete meal')
         } finally {
             setDeleting(false)
             setDeleteId(null)
@@ -108,7 +108,7 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
                     <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2">
                             <Clock className="w-5 h-5 text-primary" />
-                            Thời Khóa Biểu - {date.toLocaleDateString('vi-VN', {
+                            Schedule - {date.toLocaleDateString('en-US', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
@@ -117,7 +117,7 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
                         </CardTitle>
                         <Button onClick={onAddMeal}>
                             <Plus className="w-4 h-4 mr-2" />
-                            Thêm Bữa Ăn
+                            Add Meal
                         </Button>
                     </div>
                 </CardHeader>
@@ -125,8 +125,8 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
                     {meals.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                             <Utensils className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>Chưa có bữa ăn nào trong ngày này</p>
-                            <p className="text-sm mt-2">Click "Thêm Bữa Ăn" để bắt đầu</p>
+                            <p>No meals scheduled for this day</p>
+                            <p className="text-sm mt-2">Click "Add Meal" to get started</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
@@ -150,11 +150,11 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
                                                     <div className="flex-1">
                                                         <div className="font-semibold text-lg">{meal.food.name}</div>
                                                         <div className="text-sm text-muted-foreground mt-1">
-                                                            Khối lượng: {meal.quantity}g
+                                                            Quantity: {meal.quantity}g
                                                         </div>
                                                         {meal.notes && (
                                                             <div className="text-sm text-muted-foreground mt-1 italic">
-                                                                Ghi chú: {meal.notes}
+                                                                Notes: {meal.notes}
                                                             </div>
                                                         )}
                                                         <div className="flex gap-4 mt-3 text-sm">
@@ -189,7 +189,7 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
 
                             {/* Daily Summary */}
                             <div className="pt-4 border-t">
-                                <h4 className="font-semibold mb-3">Tổng Dinh Dưỡng Trong Ngày</h4>
+                                <h4 className="font-semibold mb-3">Daily Nutrition Total</h4>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900">
                                         <div className="text-sm text-muted-foreground">Calories</div>
@@ -218,15 +218,15 @@ export function DailyMealSchedule({ date, meals, onAddMeal, onRefresh, scheduleI
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Xác Nhận Xóa</AlertDialogTitle>
+                        <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa bữa ăn này khỏi lịch? Hành động này không thể hoàn tác.
+                            Are you sure you want to remove this meal from the schedule? This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Hủy</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                            {deleting ? 'Đang xóa...' : 'Xóa'}
+                            {deleting ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

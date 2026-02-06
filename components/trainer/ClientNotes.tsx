@@ -46,20 +46,20 @@ export function ClientNotes({ clientId, initialNotes = '' }: ClientNotesProps) {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Ghi Chú Của Trainer</CardTitle>
+                        <CardTitle>Trainer Notes</CardTitle>
                         <CardDescription>
-                            Ghi chú riêng tư về khách hàng này (chỉ bạn mới thấy)
+                            Private notes about this client (only you can see)
                         </CardDescription>
                     </div>
                     <div className="text-sm text-muted-foreground">
                         {isSaving && (
                             <span className="flex items-center gap-2">
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                Đang lưu...
+                                Saving...
                             </span>
                         )}
                         {!isSaving && lastSaved && (
-                            <span>Đã lưu lúc {lastSaved.toLocaleTimeString('vi-VN')}</span>
+                            <span>Saved at {lastSaved.toLocaleTimeString('en-US')}</span>
                         )}
                     </div>
                 </div>
@@ -69,7 +69,7 @@ export function ClientNotes({ clientId, initialNotes = '' }: ClientNotesProps) {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={8}
-                    placeholder="Thêm ghi chú về khách hàng này... (tự động lưu)"
+                    placeholder="Add notes about this client... (auto-save)"
                     className="resize-none"
                 />
             </CardContent>

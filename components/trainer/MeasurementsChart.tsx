@@ -26,12 +26,12 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Biểu Đồ Số Đo</CardTitle>
-                    <CardDescription>Theo dõi thay đổi số đo cơ thể</CardDescription>
+                    <CardTitle>Measurements Chart</CardTitle>
+                    <CardDescription>Track body measurement changes</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-center text-muted-foreground py-8">
-                        Chưa có dữ liệu số đo
+                        No measurement data available
                     </p>
                 </CardContent>
             </Card>
@@ -43,16 +43,16 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Biểu Đồ Số Đo</CardTitle>
-                        <CardDescription>Theo dõi thay đổi số đo cơ thể</CardDescription>
+                        <CardTitle>Measurements Chart</CardTitle>
+                        <CardDescription>Track body measurement changes</CardDescription>
                     </div>
                     <Select value={metric} onValueChange={(value: any) => setMetric(value)}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="body">Cơ Thể</SelectItem>
-                            <SelectItem value="measurements">Số Đo</SelectItem>
+                            <SelectItem value="body">Body</SelectItem>
+                            <SelectItem value="measurements">Measurements</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -81,7 +81,7 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
                                     dataKey="weight"
                                     stroke="#8884d8"
                                     strokeWidth={2}
-                                    name="Cân nặng (kg)"
+                                    name="Weight (kg)"
                                     dot={{ fill: '#8884d8' }}
                                 />
                                 <Line
@@ -89,7 +89,7 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
                                     dataKey="bodyFat"
                                     stroke="#82ca9d"
                                     strokeWidth={2}
-                                    name="% Mỡ"
+                                    name="Body Fat %"
                                     dot={{ fill: '#82ca9d' }}
                                 />
                                 <Line
@@ -97,7 +97,7 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
                                     dataKey="muscleMass"
                                     stroke="#ffc658"
                                     strokeWidth={2}
-                                    name="Khối cơ (kg)"
+                                    name="Muscle Mass (kg)"
                                     dot={{ fill: '#ffc658' }}
                                 />
                             </>
@@ -108,7 +108,7 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
                                     dataKey="chest"
                                     stroke="#8884d8"
                                     strokeWidth={2}
-                                    name="Ngực (cm)"
+                                    name="Chest (cm)"
                                     dot={{ fill: '#8884d8' }}
                                 />
                                 <Line
@@ -124,7 +124,7 @@ export function MeasurementsChart({ data }: MeasurementsChartProps) {
                                     dataKey="hips"
                                     stroke="#ffc658"
                                     strokeWidth={2}
-                                    name="Mông (cm)"
+                                    name="Hips (cm)"
                                     dot={{ fill: '#ffc658' }}
                                 />
                             </>

@@ -113,7 +113,15 @@ export default function SetLogger({
 
       {/* Collapsible content */}
       {!isCollapsed && (
-        <div className="px-4 pb-4 space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!isResting) {
+              handleCompleteSet()
+            }
+          }}
+          className="px-4 pb-4 space-y-4"
+        >
           {/* Weight input */}
           <div>
             <label htmlFor="weight-input" className="block text-sm font-medium text-gray-300 mb-2">
@@ -148,7 +156,7 @@ export default function SetLogger({
 
           {/* Complete set button */}
           <Button
-            onClick={handleCompleteSet}
+            type="submit"
             disabled={isResting}
             className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg font-semibold"
           >
@@ -162,7 +170,7 @@ export default function SetLogger({
               Last set: {previousWeight}kg × {previousReps} reps
             </div>
           )}
-        </div>
+        </form>
       )}
     </div>
   )

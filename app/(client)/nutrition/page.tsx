@@ -176,11 +176,11 @@ export default function NutritionPage() {
         throw new Error(error.error || 'Failed to complete')
       }
 
-      toast.success('Đã hoàn thành bữa ăn!')
+      toast.success('Meal completed!')
       fetchData() // Refresh both scheduled meals and nutrition logs
     } catch (error: any) {
       console.error('Error completing meal:', error)
-      toast.error(error.message || 'Không thể hoàn thành bữa ăn')
+      toast.error(error.message || 'Unable to complete meal')
     } finally {
       setCompletingId(null)
     }
@@ -205,11 +205,11 @@ export default function NutritionPage() {
         throw new Error('Failed to delete')
       }
 
-      toast.success('Đã xóa bữa ăn khỏi lịch')
+      toast.success('Meal removed from schedule')
       fetchData()
     } catch (error) {
       console.error('Error deleting scheduled meal:', error)
-      toast.error('Không thể xóa bữa ăn')
+      toast.error('Unable to delete meal')
     } finally {
       setDeletingScheduled(false)
       setDeleteScheduledId(null)
@@ -382,31 +382,31 @@ export default function NutritionPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-primary" />
-                Lịch Bữa Ăn
+                Meal Schedule
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Lên kế hoạch bữa ăn theo tuần, tháng hoặc năm. Tạo lịch thực đơn chi tiết và theo dõi tiến độ.
+                Plan meals by week, month, or year. Create detailed meal schedules and track progress.
               </p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-2 h-2 rounded-full bg-primary" />
-                  <span>Tạo lịch thực đơn</span>
+                  <span>Create meal schedules</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-2 h-2 rounded-full bg-secondary" />
-                  <span>Xem lịch dạng calendar</span>
+                  <span>View calendar format</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-2 h-2 rounded-full bg-accent" />
-                  <span>Theo dõi tiến độ</span>
+                  <span>Track progress</span>
                 </div>
               </div>
               <Button className="w-full mt-4" size="lg" asChild>
                 <Link href="/nutrition/schedule">
                   <CalendarDays className="w-4 h-4 mr-2" />
-                  Xem Lịch
+                  View Schedule
                 </Link>
               </Button>
             </CardContent>
@@ -474,10 +474,10 @@ export default function NutritionPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-primary" />
-                Bữa Ăn Đã Lên Lịch Hôm Nay
+                Today's Scheduled Meals
               </CardTitle>
               <Badge variant="secondary">
-                {scheduledMeals.filter(m => !m.isCompleted).length} chưa hoàn thành
+                {scheduledMeals.filter(m => !m.isCompleted).length} pending
               </Badge>
             </div>
           </CardHeader>
@@ -485,8 +485,8 @@ export default function NutritionPage() {
             {scheduledMeals.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Không có bữa ăn nào được lên lịch cho hôm nay</p>
-                <p className="text-sm mt-2">Truy cập <Link href="/nutrition/schedule" className="text-primary hover:underline">Lịch Bữa Ăn</Link> để tạo lịch</p>
+                <p>No meals scheduled for today</p>
+                <p className="text-sm mt-2">Visit <Link href="/nutrition/schedule" className="text-primary hover:underline">Meal Schedule</Link> to create a schedule</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -515,7 +515,7 @@ export default function NutritionPage() {
                             {meal.isCompleted && (
                               <Badge variant="outline" className="bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 text-xs">
                                 <Check className="w-3 h-3 mr-1" />
-                                Đã hoàn thành
+                                Completed
                               </Badge>
                             )}
                           </div>
@@ -523,7 +523,7 @@ export default function NutritionPage() {
                           {/* Food Name + From Schedule */}
                           <div className="font-semibold">{meal.food.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            Từ lịch: {meal.schedule.name}
+                            From schedule: {meal.schedule.name}
                           </div>
 
                           {/* Quantity */}
@@ -556,7 +556,7 @@ export default function NutritionPage() {
                               size="sm"
                             >
                               <Check className="w-4 h-4 mr-2" />
-                              {completingId === meal.id ? 'Đang xử lý...' : 'Hoàn thành'}
+                              {completingId === meal.id ? 'Processing...' : 'Complete'}
                             </Button>
                           )}
                           <Button
@@ -598,15 +598,15 @@ export default function NutritionPage() {
       <AlertDialog open={!!deleteScheduledId} onOpenChange={(open) => !open && setDeleteScheduledId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xóa Bữa Ăn Khỏi Lịch</AlertDialogTitle>
+            <AlertDialogTitle>Remove Meal from Schedule</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa bữa ăn này khỏi lịch không? Hành động này không thể hoàn tác.
+              Are you sure you want to remove this meal from the schedule? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingScheduled}>Hủy</AlertDialogCancel>
+            <AlertDialogCancel disabled={deletingScheduled}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteScheduled} disabled={deletingScheduled}>
-              {deletingScheduled ? 'Đang xóa...' : 'Xóa bữa ăn'}
+              {deletingScheduled ? 'Deleting...' : 'Delete meal'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

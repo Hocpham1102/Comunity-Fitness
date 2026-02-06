@@ -20,12 +20,12 @@ export function NutritionAdherence({ data }: NutritionAdherenceProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Tuân Thủ Dinh Dưỡng</CardTitle>
-                    <CardDescription>7 ngày gần nhất</CardDescription>
+                    <CardTitle>Nutrition Adherence</CardTitle>
+                    <CardDescription>Last 7 days</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-center text-muted-foreground py-8">
-                        Chưa có dữ liệu dinh dưỡng
+                        No nutrition data available
                     </p>
                 </CardContent>
             </Card>
@@ -39,12 +39,12 @@ export function NutritionAdherence({ data }: NutritionAdherenceProps) {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Tuân Thủ Dinh Dưỡng</CardTitle>
-                        <CardDescription>7 ngày gần nhất</CardDescription>
+                        <CardTitle>Nutrition Adherence</CardTitle>
+                        <CardDescription>Last 7 days</CardDescription>
                     </div>
                     <div className="text-right">
                         <div className="text-2xl font-bold">{averageAdherence.toFixed(0)}%</div>
-                        <div className="text-xs text-muted-foreground">Trung bình</div>
+                        <div className="text-xs text-muted-foreground">Average</div>
                     </div>
                 </div>
             </CardHeader>
@@ -68,7 +68,7 @@ export function NutritionAdherence({ data }: NutritionAdherenceProps) {
                                     {day.adherence.toFixed(0)}%
                                 </div>
                                 <div className="w-20 text-xs text-muted-foreground text-right">
-                                    {day.mealsLogged}/{day.totalMeals} bữa
+                                    {day.mealsLogged}/{day.totalMeals} meals
                                 </div>
                                 {isGood ? (
                                     <CheckCircle2 className="w-4 h-4 text-green-500" />

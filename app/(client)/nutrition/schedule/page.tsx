@@ -32,9 +32,9 @@ interface MealSchedule {
 }
 
 const SCHEDULE_TYPE_LABELS = {
-    WEEKLY: 'Theo Tuần',
-    MONTHLY: 'Theo Tháng',
-    YEARLY: 'Theo Năm',
+    WEEKLY: 'Weekly',
+    MONTHLY: 'Monthly',
+    YEARLY: 'Yearly',
 }
 
 const SCHEDULE_TYPE_ICONS = {
@@ -60,7 +60,7 @@ export default function MealSchedulePage() {
             }
         } catch (error) {
             console.error('Error fetching schedules:', error)
-            toast.error('Không thể tải danh sách lịch')
+            toast.error('Unable to load schedule list')
         } finally {
             setLoading(false)
         }
@@ -83,11 +83,11 @@ export default function MealSchedulePage() {
                 throw new Error('Failed to delete')
             }
 
-            toast.success('Đã xóa lịch thành công')
+            toast.success('Schedule deleted successfully')
             fetchSchedules()
         } catch (error) {
             console.error('Error deleting schedule:', error)
-            toast.error('Không thể xóa lịch')
+            toast.error('Unable to delete schedule')
         } finally {
             setDeleting(false)
             setDeleteId(null)
@@ -114,12 +114,12 @@ export default function MealSchedulePage() {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Lịch Bữa Ăn</h1>
-                        <p className="text-muted-foreground">Lên kế hoạch bữa ăn theo tuần, tháng, năm</p>
+                        <h1 className="text-3xl font-bold mb-2">Meal Schedule</h1>
+                        <p className="text-muted-foreground">Plan meals by week, month, or year</p>
                     </div>
                 </div>
                 <div className="text-center py-12 text-muted-foreground">
-                    Đang tải...
+                    Loading...
                 </div>
             </div>
         )
@@ -131,18 +131,18 @@ export default function MealSchedulePage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Lịch Bữa Ăn</h1>
-                        <p className="text-muted-foreground">Lên kế hoạch bữa ăn theo tuần, tháng, năm</p>
+                        <h1 className="text-3xl font-bold mb-2">Meal Schedule</h1>
+                        <p className="text-muted-foreground">Plan meals by week, month, or year</p>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" size="lg" asChild>
                             <Link href="/nutrition">
-                                Quay lại
+                                Back
                             </Link>
                         </Button>
                         <Button size="lg" onClick={() => setFormOpen(true)}>
                             <Plus className="w-5 h-5 mr-2" />
-                            Tạo Lịch
+                            Create Schedule
                         </Button>
                     </div>
                 </div>
@@ -153,8 +153,8 @@ export default function MealSchedulePage() {
                         <CardContent className="py-12">
                             <div className="text-center text-muted-foreground">
                                 <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                <p>Chưa có lịch bữa ăn nào</p>
-                                <p className="text-sm mt-2">Click "Tạo Lịch" để bắt đầu</p>
+                                <p>No meal schedules yet</p>
+                                <p className="text-sm mt-2">Click "Create Schedule" to get started</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -176,7 +176,7 @@ export default function MealSchedulePage() {
                                                         {SCHEDULE_TYPE_LABELS[schedule.scheduleType]}
                                                     </Badge>
                                                     {schedule.isActive && (
-                                                        <Badge variant="default">Đang hoạt động</Badge>
+                                                        <Badge variant="default">Active</Badge>
                                                     )}
                                                 </div>
                                             </div>
@@ -207,23 +207,23 @@ export default function MealSchedulePage() {
                                         )}
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Bắt đầu:</span>
-                                                <span>{new Date(schedule.startDate).toLocaleDateString('vi-VN')}</span>
+                                                <span className="text-muted-foreground">Start:</span>
+                                                <span>{new Date(schedule.startDate).toLocaleDateString('en-US')}</span>
                                             </div>
                                             {schedule.endDate && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Kết thúc:</span>
-                                                    <span>{new Date(schedule.endDate).toLocaleDateString('vi-VN')}</span>
+                                                    <span className="text-muted-foreground">End:</span>
+                                                    <span>{new Date(schedule.endDate).toLocaleDateString('en-US')}</span>
                                                 </div>
                                             )}
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Số bữa ăn:</span>
+                                                <span className="text-muted-foreground">Meals:</span>
                                                 <span className="font-semibold">{schedule.scheduledMeals.length}</span>
                                             </div>
                                         </div>
                                         <Button className="w-full mt-4" asChild>
                                             <Link href={`/nutrition/schedule/${schedule.id}`}>
-                                                Xem Chi Tiết
+                                                View Details
                                             </Link>
                                         </Button>
                                     </CardContent>
@@ -238,15 +238,15 @@ export default function MealSchedulePage() {
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Xác Nhận Xóa</AlertDialogTitle>
+                        <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa lịch này? Tất cả bữa ăn đã lên lịch sẽ bị xóa. Hành động này không thể hoàn tác.
+                            Are you sure you want to delete this schedule? All scheduled meals will be deleted. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Hủy</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                            {deleting ? 'Đang xóa...' : 'Xóa'}
+                            {deleting ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -64,7 +64,7 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
 
     const handleSearch = async () => {
         if (!query.trim()) {
-            toast.error('Vui lòng nhập tên món ăn')
+            toast.error('Please enter a food name')
             return
         }
 
@@ -82,11 +82,11 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
             setResults(data.items || [])
 
             if (data.items.length === 0) {
-                toast.info('Không tìm thấy món ăn này. Hãy thử tên khác.')
+                toast.info('Food not found. Try a different name.')
             }
         } catch (error) {
             console.error('Error searching food:', error)
-            toast.error('Không thể tìm kiếm món ăn')
+            toast.error('Unable to search for food')
         } finally {
             setLoading(false)
         }
@@ -124,7 +124,7 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
-                        placeholder="Nhập tên món ăn (vd: phở bò, bánh mì, cơm gà...)"
+                        placeholder="Enter food name (e.g., pho bo, banh mi, com ga...)"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyPress={handleKeyPress}
@@ -141,17 +141,17 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
                     {loading ? (
                         <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Đang tìm...
+                            Searching...
                         </>
                     ) : (
-                        'Tìm kiếm'
+                        'Search'
                     )}
                 </Button>
             </div>
 
             {/* Helper Text */}
             <p className="text-sm text-muted-foreground">
-                💡 Nhập tên món ăn bằng tiếng Việt hoặc tiếng Anh. Hệ thống sẽ tự động tính toán dinh dưỡng.
+                💡 Enter food name in Vietnamese or English. The system will automatically calculate nutrition.
             </p>
 
             {/* Results */}
@@ -159,7 +159,7 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-sm">
-                            Tìm thấy {results.length} kết quả
+                            Found {results.length} result{results.length > 1 ? 's' : ''}
                         </h4>
                     </div>
 
@@ -184,7 +184,7 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
                                                     <h4 className="font-semibold">{result.name}</h4>
                                                     {result.isNew && (
                                                         <Badge variant="secondary" className="text-xs">
-                                                            Mới
+                                                            New
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -222,7 +222,7 @@ export function QuickMealInput({ onSelectFood }: QuickMealInputProps) {
 
                                         {/* Serving Info */}
                                         <p className="text-xs text-muted-foreground">
-                                            Trên {result.servingSize || 100}
+                                            Per {result.servingSize || 100}
                                             {result.servingUnit || 'g'}
                                         </p>
                                     </div>

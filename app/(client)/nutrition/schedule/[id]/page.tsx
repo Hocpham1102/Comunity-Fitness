@@ -48,10 +48,10 @@ const MEAL_TYPE_COLORS: Record<string, string> = {
     POST_WORKOUT: 'bg-pink-500',
 }
 
-const DAYS_OF_WEEK = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = [
-    'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
 ]
 
 export default function ScheduleDetailPage() {
@@ -72,12 +72,12 @@ export default function ScheduleDetailPage() {
                 const data = await response.json()
                 setSchedule(data)
             } else {
-                toast.error('Không thể tải lịch')
+                toast.error('Unable to load schedule')
                 router.push('/nutrition/schedule')
             }
         } catch (error) {
             console.error('Error fetching schedule:', error)
-            toast.error('Lỗi khi tải lịch')
+            toast.error('Error loading schedule')
         } finally {
             setLoading(false)
         }
@@ -144,7 +144,7 @@ export default function ScheduleDetailPage() {
                     <Button variant="ghost" onClick={() => router.push('/nutrition/schedule')}>
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
-                    <h1 className="text-3xl font-bold">Đang tải...</h1>
+                    <h1 className="text-3xl font-bold">Loading...</h1>
                 </div>
             </div>
         )
@@ -180,7 +180,7 @@ export default function ScheduleDetailPage() {
                         <div className="flex items-center justify-between">
                             <CardTitle className="flex items-center gap-2">
                                 <CalendarIcon className="w-5 h-5" />
-                                Lịch Bữa Ăn
+                                Meal Schedule
                             </CardTitle>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={handlePrevMonth}>
@@ -252,19 +252,19 @@ export default function ScheduleDetailPage() {
 
                         {/* Legend */}
                         <div className="mt-4 pt-4 border-t">
-                            <p className="text-sm font-semibold mb-2">Chú thích:</p>
+                            <p className="text-sm font-semibold mb-2">Legend:</p>
                             <div className="flex flex-wrap gap-3">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-orange-500" />
-                                    <span className="text-xs">Sáng</span>
+                                    <span className="text-xs">Breakfast</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-green-500" />
-                                    <span className="text-xs">Trưa</span>
+                                    <span className="text-xs">Lunch</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-blue-500" />
-                                    <span className="text-xs">Tối</span>
+                                    <span className="text-xs">Dinner</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-purple-500" />

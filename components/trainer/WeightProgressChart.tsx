@@ -48,12 +48,12 @@ export function WeightProgressChart({ data, targetWeight }: WeightProgressChartP
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Biểu Đồ Cân Nặng</CardTitle>
-                    <CardDescription>Theo dõi tiến độ cân nặng theo thời gian</CardDescription>
+                    <CardTitle>Weight Chart</CardTitle>
+                    <CardDescription>Track weight progress over time</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-center text-muted-foreground py-8">
-                        Chưa có dữ liệu cân nặng
+                        No weight data available
                     </p>
                 </CardContent>
             </Card>
@@ -65,19 +65,19 @@ export function WeightProgressChart({ data, targetWeight }: WeightProgressChartP
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Biểu Đồ Cân Nặng</CardTitle>
-                        <CardDescription>Theo dõi tiến độ cân nặng theo thời gian</CardDescription>
+                        <CardTitle>Weight Chart</CardTitle>
+                        <CardDescription>Track weight progress over time</CardDescription>
                     </div>
                     <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
                         <SelectTrigger className="w-[120px]">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="1M">1 Tháng</SelectItem>
-                            <SelectItem value="3M">3 Tháng</SelectItem>
-                            <SelectItem value="6M">6 Tháng</SelectItem>
-                            <SelectItem value="1Y">1 Năm</SelectItem>
-                            <SelectItem value="ALL">Tất Cả</SelectItem>
+                            <SelectItem value="1M">1 Month</SelectItem>
+                            <SelectItem value="3M">3 Months</SelectItem>
+                            <SelectItem value="6M">6 Months</SelectItem>
+                            <SelectItem value="1Y">1 Year</SelectItem>
+                            <SelectItem value="ALL">All</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -94,7 +94,7 @@ export function WeightProgressChart({ data, targetWeight }: WeightProgressChartP
                             }}
                         />
                         <YAxis
-                            label={{ value: 'Cân nặng (kg)', angle: -90, position: 'insideLeft' }}
+                            label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
                         />
                         <Tooltip
                             labelFormatter={(value) => new Date(value).toLocaleDateString('vi-VN')}
@@ -106,7 +106,7 @@ export function WeightProgressChart({ data, targetWeight }: WeightProgressChartP
                             dataKey="weight"
                             stroke="hsl(var(--primary))"
                             strokeWidth={2}
-                            name="Cân nặng thực tế"
+                            name="Actual weight"
                             dot={{ fill: 'hsl(var(--primary))' }}
                         />
                         {targetWeight && (
@@ -116,7 +116,7 @@ export function WeightProgressChart({ data, targetWeight }: WeightProgressChartP
                                 stroke="hsl(var(--muted-foreground))"
                                 strokeWidth={2}
                                 strokeDasharray="5 5"
-                                name="Mục tiêu"
+                                name="Target"
                                 dot={false}
                             />
                         )}

@@ -63,12 +63,12 @@ export function MealAssignmentDialog({
         e.preventDefault()
 
         if (!selectedFood) {
-            toast.error('Vui lòng chọn món ăn')
+            toast.error('Please select a food item')
             return
         }
 
         if (!selectedDate) {
-            toast.error('Vui lòng chọn ngày')
+            toast.error('Please select a date')
             return
         }
 
@@ -92,11 +92,11 @@ export function MealAssignmentDialog({
                 throw new Error('Failed to add meal')
             }
 
-            toast.success('Đã thêm bữa ăn vào lịch')
+            toast.success('Meal added to schedule')
             onSuccess()
         } catch (error) {
             console.error('Error adding meal:', error)
-            toast.error('Không thể thêm bữa ăn')
+            toast.error('Unable to add meal')
         } finally {
             setLoading(false)
         }
@@ -120,9 +120,9 @@ export function MealAssignmentDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Thêm Bữa Ăn Vào Lịch</DialogTitle>
+                    <DialogTitle>Add Meal to Schedule</DialogTitle>
                     <DialogDescription>
-                        {selectedDate && `Ngày: ${selectedDate.toLocaleDateString('vi-VN', {
+                        {selectedDate && `Date: ${selectedDate.toLocaleDateString('en-US', {
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',
@@ -134,7 +134,7 @@ export function MealAssignmentDialog({
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Food Search */}
                     <div className="space-y-3">
-                        <Label className="text-base font-semibold">Tìm Món Ăn</Label>
+                        <Label className="text-base font-semibold">Find Food</Label>
                         {!selectedFood ? (
                             <QuickMealInput onSelectFood={setSelectedFood} />
                         ) : (
@@ -166,7 +166,7 @@ export function MealAssignmentDialog({
                                     </Button>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                    ✓ Món ăn đã chọn. Cấu hình chi tiết bên dưới.
+                                    ✓ Food selected. Configure details below.
                                 </p>
                             </div>
                         )}
@@ -177,7 +177,7 @@ export function MealAssignmentDialog({
                         <>
                             {/* Meal Type */}
                             <div className="space-y-2">
-                                <Label htmlFor="mealType" className="text-base font-semibold">Loại Bữa Ăn *</Label>
+                                <Label htmlFor="mealType" className="text-base font-semibold">Meal Type *</Label>
                                 <Select
                                     value={formData.mealType}
                                     onValueChange={(value) => setFormData({ ...formData, mealType: value })}
@@ -186,19 +186,19 @@ export function MealAssignmentDialog({
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="BREAKFAST">🌅 Bữa Sáng</SelectItem>
-                                        <SelectItem value="LUNCH">☀️ Bữa Trưa</SelectItem>
-                                        <SelectItem value="DINNER">🌙 Bữa Tối</SelectItem>
+                                        <SelectItem value="BREAKFAST">🌅 Breakfast</SelectItem>
+                                        <SelectItem value="LUNCH">☀️ Lunch</SelectItem>
+                                        <SelectItem value="DINNER">🌙 Dinner</SelectItem>
                                         <SelectItem value="SNACK">🍎 Snack</SelectItem>
-                                        <SelectItem value="PRE_WORKOUT">💪 Trước Tập</SelectItem>
-                                        <SelectItem value="POST_WORKOUT">✨ Sau Tập</SelectItem>
+                                        <SelectItem value="PRE_WORKOUT">💪 Pre-Workout</SelectItem>
+                                        <SelectItem value="POST_WORKOUT">✨ Post-Workout</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             {/* Quantity */}
                             <div className="space-y-2">
-                                <Label htmlFor="quantity" className="text-base font-semibold">Khối Lượng (gram) *</Label>
+                                <Label htmlFor="quantity" className="text-base font-semibold">Quantity (grams) *</Label>
                                 <Input
                                     id="quantity"
                                     type="number"
@@ -210,14 +210,14 @@ export function MealAssignmentDialog({
                                     required
                                 />
                                 <p className="text-sm text-muted-foreground">
-                                    Nhập khối lượng bằng gram (vd: 100g, 250g, 350g)
+                                    Enter quantity in grams (e.g., 100g, 250g, 350g)
                                 </p>
                             </div>
 
                             {/* Nutrition Preview */}
                             {nutrition && (
                                 <div className="p-4 rounded-lg bg-muted border-2">
-                                    <h4 className="font-semibold mb-3">Dinh Dưỡng Dự Kiến</h4>
+                                    <h4 className="font-semibold mb-3">Expected Nutrition</h4>
                                     <div className="grid grid-cols-4 gap-3">
                                         <div className="text-center">
                                             <div className="text-2xl font-bold text-orange-600">{nutrition.calories.toFixed(0)}</div>
@@ -241,12 +241,12 @@ export function MealAssignmentDialog({
 
                             {/* Notes */}
                             <div className="space-y-2">
-                                <Label htmlFor="notes" className="text-base font-semibold">Ghi Chú</Label>
+                                <Label htmlFor="notes" className="text-base font-semibold">Notes</Label>
                                 <Textarea
                                     id="notes"
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    placeholder="Thêm ghi chú về bữa ăn..."
+                                    placeholder="Add notes about this meal..."
                                     rows={2}
                                     className="resize-none"
                                 />
@@ -255,10 +255,10 @@ export function MealAssignmentDialog({
                             {/* Submit Buttons */}
                             <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                                    Hủy
+                                    Cancel
                                 </Button>
                                 <Button type="submit" size="lg" disabled={loading}>
-                                    {loading ? 'Đang thêm...' : 'Thêm Bữa Ăn'}
+                                    {loading ? 'Adding...' : 'Add Meal'}
                                 </Button>
                             </div>
                         </>
