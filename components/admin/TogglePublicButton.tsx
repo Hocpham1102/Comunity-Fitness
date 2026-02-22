@@ -10,9 +10,10 @@ interface TogglePublicButtonProps {
     workoutId: string
     workoutName: string
     isPublic: boolean
+    onSuccess?: () => void
 }
 
-export default function TogglePublicButton({ workoutId, workoutName, isPublic }: TogglePublicButtonProps) {
+export default function TogglePublicButton({ workoutId, workoutName, isPublic, onSuccess }: TogglePublicButtonProps) {
     const [isUpdating, setIsUpdating] = useState(false)
     const router = useRouter()
 
@@ -35,7 +36,8 @@ export default function TogglePublicButton({ workoutId, workoutName, isPublic }:
             }
 
             toast.success(`"${workoutName}" is now ${!isPublic ? 'public' : 'private'}`)
-            router.refresh()
+            if (onSuccess) onSuccess()
+            else router.refresh()
         } catch (error: any) {
             console.error('Toggle public error:', error)
             toast.error(error.message || 'Failed to update workout')

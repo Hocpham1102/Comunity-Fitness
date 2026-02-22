@@ -20,9 +20,10 @@ import { toast } from 'sonner'
 interface AdminDeleteWorkoutButtonProps {
     workoutId: string
     workoutName: string
+    onSuccess?: () => void
 }
 
-export default function AdminDeleteWorkoutButton({ workoutId, workoutName }: AdminDeleteWorkoutButtonProps) {
+export default function AdminDeleteWorkoutButton({ workoutId, workoutName, onSuccess }: AdminDeleteWorkoutButtonProps) {
     const [isDeleting, setIsDeleting] = useState(false)
     const [open, setOpen] = useState(false)
     const router = useRouter()
@@ -41,7 +42,8 @@ export default function AdminDeleteWorkoutButton({ workoutId, workoutName }: Adm
 
             toast.success(`Deleted "${workoutName}" successfully`)
             setOpen(false)
-            router.refresh()
+            if (onSuccess) onSuccess()
+            else router.refresh()
         } catch (error: any) {
             console.error('Delete workout error:', error)
             toast.error(error.message || 'Failed to delete workout')

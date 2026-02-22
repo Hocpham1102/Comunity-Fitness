@@ -8,9 +8,13 @@ export async function GET(request: NextRequest) {
         const q = searchParams.get('q') || undefined
         const page = parseInt(searchParams.get('page') || '1')
         const pageSize = parseInt(searchParams.get('pageSize') || '20')
-        const isPublic = searchParams.get('isPublic') === 'true' ? true : undefined
+        const isPublicParam = searchParams.get('isPublic')
+        const isPublic = isPublicParam === 'true' ? true : isPublicParam === 'false' ? false : undefined
 
-        const result = await searchFoods({ q, page, pageSize, isPublic })
+        const session = await auth()
+        const isAdmin = session?.user?.role === 'ADMIN'
+
+        const result = await searchFoods({ q, page, pageSize, isPublic, isAdmin })
         return NextResponse.json(result)
     } catch (error) {
         console.error('Error fetching foods:', error)

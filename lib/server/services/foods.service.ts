@@ -5,6 +5,7 @@ export interface SearchFoodsParams {
     page?: number
     pageSize?: number
     isPublic?: boolean
+    isAdmin?: boolean
 }
 
 export interface CreateFoodData {
@@ -50,11 +51,12 @@ export async function searchFoods(params: SearchFoodsParams) {
         }
     }
 
-    // Public filter
+    // Public filter:
+    // - Admin sees everything unless explicitly filtering
+    // - Non-admin without explicit filter sees public only
     if (params.isPublic !== undefined) {
         where.isPublic = params.isPublic
-    } else {
-        // Default to public only
+    } else if (!params.isAdmin) {
         where.isPublic = true
     }
 

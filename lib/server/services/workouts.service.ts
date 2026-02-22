@@ -126,6 +126,9 @@ export async function listWorkouts(params: ListWorkoutsParams, user?: AuthUser) 
   } else if (!user?.id) {
     // unauthenticated: only public
     where.isPublic = true
+  } else if (user.role === 'ADMIN') {
+    // Admins can see all workouts regardless of visibility or ownership
+    // (no additional filter needed)
   } else if (params.isPublic === true) {
     // Authenticated but asking for public
     where.isPublic = true
