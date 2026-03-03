@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
       difficulty: difficulty || undefined,
       page,
       pageSize,
+      // if logged in, also include user's own private exercises
+      createdById: session?.user?.id,
     })
 
     return NextResponse.json(result, { status: 200 })

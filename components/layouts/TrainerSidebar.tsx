@@ -3,9 +3,18 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
     Home,
     Users,
@@ -16,7 +25,12 @@ import {
     User,
     X,
     Activity,
+    ShieldCheck,
+    Settings,
+    LogOut,
+    ChevronUp,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 const navigation = [
     { name: 'Dashboard', href: '/trainer/dashboard', icon: Home },
@@ -26,7 +40,8 @@ const navigation = [
     { name: 'Meal Plans', href: '/trainer/nutrition', icon: Apple },
     { name: 'My Courses', href: '/trainer/courses', icon: BookOpen },
     { name: 'Analytics', href: '/trainer/analytics', icon: BarChart3 },
-    { name: 'Trainer Profile', href: '/trainer/profile', icon: User },
+    { name: 'Verification', href: '/trainer/verification', icon: ShieldCheck, sublabel: 'Unlock features' },
+    { name: 'Trainer Profile', href: '/trainer/profile', icon: User, sublabel: 'Your public info' },
 ]
 
 interface TrainerSidebarProps {
@@ -39,6 +54,7 @@ export function TrainerSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Traine
     const pathname = usePathname()
     const { data: session } = useSession()
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+    const [verificationStatus, setVerificationStatus] = useState<string | null>(null)
 
     // Load avatar from API
     useEffect(() => {
@@ -54,8 +70,21 @@ export function TrainerSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Traine
             }
         }
 
+        const fetchVerification = async () => {
+            try {
+                const res = await fetch('/api/trainer/verification-request')
+                if (res.ok) {
+                    const data = await res.json()
+                    setVerificationStatus(data.request?.status ?? null)
+                }
+            } catch {
+                // ignore
+            }
+        }
+
         if (session?.user?.id) {
             fetchAvatar()
+            fetchVerification()
         }
     }, [session?.user?.id])
 
@@ -129,7 +158,7 @@ export function TrainerSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Traine
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                    <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                         {navigation.map((item) => {
                             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                             return (
@@ -138,36 +167,80 @@ export function TrainerSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Traine
                                     href={item.href}
                                     onClick={() => isMobile && setSidebarOpen(false)}
                                     className={cn(
-                                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                                        "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors",
                                         isActive
                                             ? "bg-primary text-primary-foreground"
                                             : "hover:bg-muted text-muted-foreground hover:text-foreground",
                                     )}
                                 >
-                                    <item.icon className="w-5 h-5" />
-                                    <span className="font-medium">{item.name}</span>
+                                    <item.icon className="w-5 h-5 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-medium block leading-tight">{item.name}</span>
+                                        {item.sublabel && (
+                                            <span className={cn(
+                                                "text-[10px] leading-tight block",
+                                                isActive ? "text-primary-foreground/70" : "text-muted-foreground/70"
+                                            )}>{item.sublabel}</span>
+                                        )}
+                                    </div>
+                                    {item.name === 'Verification' && (
+                                        verificationStatus === 'APPROVED' ? (
+                                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 text-xs px-1.5 py-0">✓</Badge>
+                                        ) : verificationStatus === 'PENDING' ? (
+                                            <Badge variant="secondary" className="text-xs px-1.5 py-0">…</Badge>
+                                        ) : verificationStatus === 'REJECTED' ? (
+                                            <Badge variant="destructive" className="text-xs px-1.5 py-0">!</Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="text-xs px-1.5 py-0">New</Badge>
+                                        )
+                                    )}
                                 </Link>
                             )
                         })}
                     </nav>
 
-                    {/* User Profile */}
+                    {/* User Profile Dropdown */}
                     <div className="p-4 border-t">
-                        <Link href="/trainer/profile" onClick={() => isMobile && setSidebarOpen(false)}>
-                            <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
-                                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
-                                    {avatarUrl ? (
-                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-sm font-medium text-primary-foreground">{getInitials()}</span>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-medium truncate">{session?.user?.name || 'Trainer'}</div>
-                                    <div className="text-sm text-muted-foreground truncate">{session?.user?.email || ''}</div>
-                                </div>
-                            </div>
-                        </Link>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-muted transition-colors text-left">
+                                    <Avatar className="h-9 w-9 shrink-0">
+                                        <AvatarImage src={avatarUrl ?? undefined} alt={session?.user?.name ?? 'Trainer'} />
+                                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                                            {getInitials()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-sm truncate">{session?.user?.name || 'Trainer'}</div>
+                                        <div className="text-xs text-muted-foreground truncate">{session?.user?.email || ''}</div>
+                                    </div>
+                                    <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56 mb-1" side="top" align="start" sideOffset={8}>
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-0.5">
+                                        <p className="text-sm font-medium">{session?.user?.name || 'Trainer'}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{session?.user?.email || ''}</p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href="/trainer/settings" onClick={() => isMobile && setSidebarOpen(false)} className="cursor-pointer">
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        Settings
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() => signOut({ callbackUrl: '/' })}
+                                    className="text-destructive focus:text-destructive cursor-pointer"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </aside>

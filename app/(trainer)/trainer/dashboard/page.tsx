@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatsCard } from '@/components/trainer/StatsCard'
-import { Users, BookOpen, DollarSign, TrendingUp, UserPlus, Dumbbell, Apple, Plus } from 'lucide-react'
+import { Users, BookOpen, TrendingUp, UserPlus, Dumbbell, Apple, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 interface TrainerStats {
@@ -61,6 +61,9 @@ export default function TrainerDashboard() {
                     Here's what's happening with your clients and courses today.
                 </p>
             </div>
+
+            {/* Onboarding Banner */}
+            <OnboardingBanner />
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -161,5 +164,90 @@ export default function TrainerDashboard() {
                 </Card>
             </div>
         </div>
+    )
+}
+
+// ─── Onboarding Banner ──────────────────────────────────────────────────────────
+function OnboardingBanner() {
+    const { data: session } = useSession()
+    const [status, setStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | null | 'loading'>('loading')
+    const [isVerified, setIsVerified] = useState(false)
+
+    useEffect(() => {
+        if (!session?.user?.id) return
+        fetch('/api/trainer/verification-request')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data) {
+                    setIsVerified(data.isVerified ?? false)
+                    setStatus(data.request?.status ?? null)
+                }
+            })
+            .catch(() => setStatus(null))
+    }, [session?.user?.id])
+
+    // Hide when verified or still loading
+    if (status === 'loading' || isVerified) return null
+
+    const step2Icon = status === 'PENDING' ? '🕐' : status === 'REJECTED' ? '❌' : '⏳'
+    const step2Label =
+        status === 'PENDING'
+            ? "Pending admin review — we'll notify you once approved"
+            : status === 'REJECTED'
+                ? 'Your request was rejected — please review and resubmit'
+                : 'Submit your credentials so an admin can approve you'
+    const step2Btn = status === 'REJECTED' ? 'Resubmit Request →' : 'Request Verification →'
+
+    return (
+        <Card className="border-primary/30 bg-primary/5 dark:bg-primary/10">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-base">🚀 Get started — 2 steps to unlock all features</CardTitle>
+                <CardDescription>
+                    Complete these steps to access Clients, Courses, and Meal Plans.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {/* Step 1 — always done */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60">
+                    <span className="text-lg mt-0.5">✅</span>
+                    <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm flex items-center gap-2">
+                            Step 1: Set up your Trainer Profile
+                            <span className="text-xs font-normal text-green-600 dark:text-green-400">Done!</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                            Your public info visible to clients — bio, specializations, hourly rate, social links.
+                        </div>
+                    </div>
+                    <Button asChild size="sm" variant="ghost" className="shrink-0 text-xs h-7">
+                        <Link href="/trainer/profile">Edit Profile</Link>
+                    </Button>
+                </div>
+
+                {/* Step 2 — verification */}
+                <div className={`flex items-start gap-3 p-3 rounded-lg border ${status === 'PENDING'
+                        ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800'
+                        : status === 'REJECTED'
+                            ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+                            : 'bg-background/60 border-border'
+                    }`}>
+                    <span className="text-lg mt-0.5">{step2Icon}</span>
+                    <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm">Step 2: Get Verified</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{step2Label}</div>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                            {['Clients', 'Courses', 'Meal Plans'].map(f => (
+                                <span key={f} className="text-xs bg-muted px-2 py-0.5 rounded-full">🔒 {f}</span>
+                            ))}
+                        </div>
+                    </div>
+                    {status !== 'PENDING' && (
+                        <Button asChild size="sm" className="shrink-0 text-xs h-7">
+                            <Link href="/trainer/verification">{step2Btn}</Link>
+                        </Button>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     )
 }

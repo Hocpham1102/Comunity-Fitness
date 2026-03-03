@@ -12,6 +12,7 @@ import { BulkActionToolbar } from '@/components/trainer/BulkActionToolbar'
 import { UserPlus, Search, Users } from 'lucide-react'
 import Link from 'next/link'
 import { ClientStatus } from '@prisma/client'
+import { VerificationGate } from '@/components/trainer/VerificationGate'
 
 interface Client {
     id: string
@@ -119,143 +120,145 @@ export default function ClientsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold">My Clients</h1>
-                    <p className="text-muted-foreground mt-2">
-                        Manage and track your client relationships
-                    </p>
+        <VerificationGate>
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold">My Clients</h1>
+                        <p className="text-muted-foreground mt-2">
+                            Manage and track your client relationships
+                        </p>
+                    </div>
+                    <Button asChild>
+                        <Link href="/trainer/clients/invite">
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Invite Client
+                        </Link>
+                    </Button>
                 </div>
-                <Button asChild>
-                    <Link href="/trainer/clients/invite">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Invite Client
-                    </Link>
-                </Button>
-            </div>
 
-            {/* Search & Filter */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>Search & Filter</CardTitle>
-                            <CardDescription>Find and filter clients by criteria</CardDescription>
-                        </div>
-                        {filteredAndSortedClients.length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <Checkbox
-                                    checked={selectedIds.length === filteredAndSortedClients.length}
-                                    onCheckedChange={handleSelectAll}
-                                />
-                                <span className="text-sm text-muted-foreground">
-                                    Select All ({filteredAndSortedClients.length})
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        {/* Search */}
-                        <div className="relative md:col-span-1">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                            <Input
-                                placeholder="Search by name or email..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
-
-                        {/* Status Filter */}
-                        <div>
-                            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Filter by status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All statuses</SelectItem>
-                                    <SelectItem value="INVITED">Invited</SelectItem>
-                                    <SelectItem value="ACTIVE">Active</SelectItem>
-                                    <SelectItem value="INACTIVE">Inactive</SelectItem>
-                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Sort */}
-                        <div className="flex gap-2">
-                            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                                <SelectTrigger className="flex-1">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="name">Name</SelectItem>
-                                    <SelectItem value="startDate">Start date</SelectItem>
-                                    <SelectItem value="lastActivity">Last activity</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                            >
-                                {sortOrder === 'asc' ? '↑' : '↓'}
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Clients Grid */}
-            {filteredAndSortedClients.length === 0 ? (
+                {/* Search & Filter */}
                 <Card>
-                    <CardContent className="py-12">
-                        <div className="text-center">
-                            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">No clients found</h3>
-                            <p className="text-muted-foreground mb-4">
-                                {searchQuery || statusFilter !== 'ALL'
-                                    ? 'Try adjusting your filters'
-                                    : 'Start by inviting your first client'}
-                            </p>
-                            {!searchQuery && statusFilter === 'ALL' && (
-                                <Button asChild>
-                                    <Link href="/trainer/clients/invite">
-                                        <UserPlus className="w-4 h-4 mr-2" />
-                                        Invite Client
-                                    </Link>
-                                </Button>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Search & Filter</CardTitle>
+                                <CardDescription>Find and filter clients by criteria</CardDescription>
+                            </div>
+                            {filteredAndSortedClients.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        checked={selectedIds.length === filteredAndSortedClients.length}
+                                        onCheckedChange={handleSelectAll}
+                                    />
+                                    <span className="text-sm text-muted-foreground">
+                                        Select All ({filteredAndSortedClients.length})
+                                    </span>
+                                </div>
                             )}
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            {/* Search */}
+                            <div className="relative md:col-span-1">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                                <Input
+                                    placeholder="Search by name or email..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+
+                            {/* Status Filter */}
+                            <div>
+                                <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Filter by status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">All statuses</SelectItem>
+                                        <SelectItem value="INVITED">Invited</SelectItem>
+                                        <SelectItem value="ACTIVE">Active</SelectItem>
+                                        <SelectItem value="INACTIVE">Inactive</SelectItem>
+                                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Sort */}
+                            <div className="flex gap-2">
+                                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="name">Name</SelectItem>
+                                        <SelectItem value="startDate">Start date</SelectItem>
+                                        <SelectItem value="lastActivity">Last activity</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                                >
+                                    {sortOrder === 'asc' ? '↑' : '↓'}
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
-            ) : (
-                <>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredAndSortedClients.map((client) => (
-                            <ClientCard
-                                key={client.id}
-                                client={client}
-                                isSelected={selectedIds.includes(client.id)}
-                                onSelectChange={(checked) => handleSelectClient(client.id, checked)}
-                            />
-                        ))}
-                    </div>
 
-                    {selectedIds.length > 0 && (
-                        <BulkActionToolbar
-                            selectedCount={selectedIds.length}
-                            selectedIds={selectedIds}
-                            onClearSelection={() => setSelectedIds([])}
-                            onBulkComplete={handleBulkComplete}
-                        />
-                    )}
-                </>
-            )}
-        </div>
+                {/* Clients Grid */}
+                {filteredAndSortedClients.length === 0 ? (
+                    <Card>
+                        <CardContent className="py-12">
+                            <div className="text-center">
+                                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                                <h3 className="text-lg font-semibold mb-2">No clients found</h3>
+                                <p className="text-muted-foreground mb-4">
+                                    {searchQuery || statusFilter !== 'ALL'
+                                        ? 'Try adjusting your filters'
+                                        : 'Start by inviting your first client'}
+                                </p>
+                                {!searchQuery && statusFilter === 'ALL' && (
+                                    <Button asChild>
+                                        <Link href="/trainer/clients/invite">
+                                            <UserPlus className="w-4 h-4 mr-2" />
+                                            Invite Client
+                                        </Link>
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {filteredAndSortedClients.map((client) => (
+                                <ClientCard
+                                    key={client.id}
+                                    client={client}
+                                    isSelected={selectedIds.includes(client.id)}
+                                    onSelectChange={(checked) => handleSelectClient(client.id, checked)}
+                                />
+                            ))}
+                        </div>
+
+                        {selectedIds.length > 0 && (
+                            <BulkActionToolbar
+                                selectedCount={selectedIds.length}
+                                selectedIds={selectedIds}
+                                onClearSelection={() => setSelectedIds([])}
+                                onBulkComplete={handleBulkComplete}
+                            />
+                        )}
+                    </>
+                )}
+            </div>
+        </VerificationGate>
     )
 }

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, ArrowRight, Clock, Users, Target, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, Users, Target, Loader2, RotateCcw, X, Save } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -23,40 +23,110 @@ const STEPS = [
     { id: 4, title: 'Review & Save', description: 'Final review and save' },
 ]
 
+const DRAFT_KEY = 'trainer_workout_draft'
+
+const DEFAULT_FORM: WorkoutFormData = {
+    name: '',
+    description: '',
+    difficulty: 'BEGINNER',
+    estimatedTime: 30,
+    exercises: [],
+    isTemplate: true,
+    isPublic: false,
+}
+
+interface SavedDraft {
+    formData: WorkoutFormData
+    currentStep: number
+    savedAt: string
+}
+
 export default function TrainerCreateWorkoutPage() {
     const router = useRouter()
     const [currentStep, setCurrentStep] = useState(1)
     const [isSaving, setIsSaving] = useState(false)
+    const [draftBanner, setDraftBanner] = useState<SavedDraft | null>(null)
+    const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-    const [formData, setFormData] = useState<WorkoutFormData>({
-        name: '',
-        description: '',
-        difficulty: 'BEGINNER',
-        estimatedTime: 30,
-        exercises: [],
-        isTemplate: true,
-        isPublic: false,
-    })
+    const [formData, setFormData] = useState<WorkoutFormData>(DEFAULT_FORM)
+
+    // On mount — check for existing draft
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(DRAFT_KEY)
+            if (raw) {
+                const draft: SavedDraft = JSON.parse(raw)
+                // Only show banner if there's a meaningful draft (at least a name)
+                if (draft.formData?.name?.trim()) {
+                    setDraftBanner(draft)
+                }
+            }
+        } catch {
+            // corrupt draft — ignore
+        }
+    }, [])
+
+    // Auto-save draft whenever formData or step changes
+    useEffect(() => {
+        // Don't save an empty draft
+        if (!formData.name.trim() && formData.exercises.length === 0) return
+
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+        autoSaveTimerRef.current = setTimeout(() => {
+            try {
+                const draft: SavedDraft = {
+                    formData,
+                    currentStep,
+                    savedAt: new Date().toISOString(),
+                }
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+            } catch {
+                // storage full or unavailable — ignore silently
+            }
+        }, 800) // debounce 800ms
+    }, [formData, currentStep])
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+        }
+    }, [])
 
     // Scroll to top when step changes
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }, [currentStep])
 
+    const restoreDraft = () => {
+        if (!draftBanner) return
+        setFormData(draftBanner.formData)
+        setCurrentStep(draftBanner.currentStep)
+        setDraftBanner(null)
+        toast.success('Draft restored!')
+    }
+
+    const discardDraft = () => {
+        localStorage.removeItem(DRAFT_KEY)
+        setDraftBanner(null)
+    }
+
+    const clearDraftAndReset = () => {
+        localStorage.removeItem(DRAFT_KEY)
+        setFormData(DEFAULT_FORM)
+        setCurrentStep(1)
+    }
+
     const updateFormData = useCallback((updates: Partial<WorkoutFormData>) => {
         setFormData(prev => ({ ...prev, ...updates }))
     }, [])
 
     const nextStep = () => {
-        if (currentStep < STEPS.length) {
-            setCurrentStep(currentStep + 1)
-        }
+        if (currentStep < STEPS.length) setCurrentStep(currentStep + 1)
     }
 
     const prevStep = () => {
-        if (currentStep > 1) {
-            setCurrentStep(currentStep - 1)
-        }
+        if (currentStep > 1) setCurrentStep(currentStep - 1)
     }
 
     const handleSave = async () => {
@@ -64,22 +134,28 @@ export default function TrainerCreateWorkoutPage() {
         try {
             const response = await fetch('/api/trainer/workouts', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             })
 
             if (!response.ok) {
-                throw new Error('Failed to create workout')
+                const errData = await response.json().catch(() => ({}))
+                const msg = errData?.message || errData?.error || 'Failed to create workout'
+                const detail = errData?.errors?.[0]
+                    ? ` (${errData.errors[0].path.join('.')}: ${errData.errors[0].message})`
+                    : ''
+                throw new Error(msg + detail)
             }
+
+            // Clear draft on success
+            localStorage.removeItem(DRAFT_KEY)
 
             toast.success('Workout template created successfully!')
             router.push('/trainer/workouts')
             router.refresh()
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating workout:', error)
-            toast.error('Failed to create workout. Please try again.')
+            toast.error(error?.message || 'Failed to create workout. Please try again.')
         } finally {
             setIsSaving(false)
         }
@@ -129,21 +205,45 @@ export default function TrainerCreateWorkoutPage() {
 
     const canProceed = () => {
         switch (currentStep) {
-            case 1:
-                return formData.name.trim() !== ''
-            case 2:
-                return formData.exercises.length > 0
-            case 3:
-                return formData.exercises.every(ex => ex.sets > 0)
-            case 4:
-                return true
-            default:
-                return false
+            case 1: return formData.name.trim() !== ''
+            case 2: return formData.exercises.length > 0
+            case 3: return formData.exercises.every(ex => ex.sets > 0)
+            case 4: return true
+            default: return false
         }
     }
 
+    const hasDraftInProgress = formData.name.trim() !== '' || formData.exercises.length > 0
+
     return (
         <div className="space-y-6">
+            {/* Draft restore banner */}
+            {draftBanner && (
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
+                    <RotateCcw className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                            Unsaved draft found: &ldquo;{draftBanner.formData.name}&rdquo;
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                            Saved at step {draftBanner.currentStep} · {new Date(draftBanner.savedAt).toLocaleString()}
+                        </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                        <Button size="sm" onClick={restoreDraft}
+                            className="bg-amber-600 hover:bg-amber-700 text-white text-xs h-8">
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Restore
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={discardDraft}
+                            className="text-amber-700 hover:text-amber-900 text-xs h-8">
+                            <X className="w-3 h-3 mr-1" />
+                            Discard
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -154,14 +254,20 @@ export default function TrainerCreateWorkoutPage() {
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold">
-                            Create Workout Template
-                        </h1>
+                        <h1 className="text-2xl font-bold">Create Workout Template</h1>
                         <p className="text-sm text-muted-foreground">
                             Step {currentStep} of {STEPS.length}
                         </p>
                     </div>
                 </div>
+
+                {/* Auto-save indicator */}
+                {hasDraftInProgress && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Save className="w-3 h-3" />
+                        <span>Auto-saving draft…</span>
+                    </div>
+                )}
             </div>
 
             <div className="grid lg:grid-cols-4 gap-6">
@@ -178,7 +284,7 @@ export default function TrainerCreateWorkoutPage() {
                                     className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${step.id === currentStep
                                         ? 'bg-primary/10 border border-primary/20'
                                         : step.id < currentStep
-                                            ? 'bg-green-50 border border-green-200'
+                                            ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800'
                                             : 'bg-muted/50'
                                         }`}
                                 >
@@ -226,6 +332,19 @@ export default function TrainerCreateWorkoutPage() {
                                 </div>
                             </CardContent>
                         </Card>
+                    )}
+
+                    {/* Discard draft CTA */}
+                    {hasDraftInProgress && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearDraftAndReset}
+                            className="mt-4 w-full text-muted-foreground hover:text-destructive text-xs"
+                        >
+                            <X className="w-3 h-3 mr-1" />
+                            Start over / clear draft
+                        </Button>
                     )}
                 </div>
 

@@ -8,6 +8,7 @@ export interface ExerciseSearchParams {
   difficulty?: DifficultyLevel
   page?: number
   pageSize?: number
+  createdById?: string  // when set, also includes the user's own private exercises
 }
 
 export interface ExerciseSearchResult {
@@ -29,13 +30,15 @@ export async function searchExercises(params: ExerciseSearchParams) {
     difficulty,
     page = 1,
     pageSize = 20,
+    createdById,
   } = params
 
   const skip = (page - 1) * pageSize
 
-  const where: any = {
-    isPublic: true,
-  }
+  // Public exercises OR trainer's own APPROVED exercises (pending/rejected stay hidden)
+  const where: any = createdById
+    ? { OR: [{ isPublic: true }, { createdById, approvalStatus: 'APPROVED' }] }
+    : { isPublic: true }
 
   // Text search
   if (q) {

@@ -45,13 +45,13 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
     const newExercises = [...exercises]
     const [movedExercise] = newExercises.splice(fromIndex, 1)
     newExercises.splice(toIndex, 0, movedExercise)
-    
+
     // Update order for all exercises
     const reorderedExercises = newExercises.map((exercise, index) => ({
       ...exercise,
       order: index
     }))
-    
+
     onExercisesChange(reorderedExercises)
   }, [exercises, onExercisesChange])
 
@@ -155,7 +155,7 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => startEditing(exercise.id)}
+                    onClick={() => startEditing(exercise.id ?? '')}
                   >
                     <Edit3 className="w-4 h-4" />
                   </Button>
@@ -197,11 +197,11 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                     type="number"
                     min="1"
                     max="1000"
-                    value={exercise.reps || ''}
-                    onChange={(e) => updateExercise(index, { 
-                      reps: e.target.value ? parseInt(e.target.value) : undefined 
+                    value={exercise.reps ?? ''}
+                    onChange={(e) => updateExercise(index, {
+                      reps: e.target.value ? parseInt(e.target.value) : undefined
                     })}
-                    placeholder="Optional"
+                    placeholder="e.g. 10"
                   />
                 </div>
 
@@ -214,8 +214,8 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                     min="1"
                     max="3600"
                     value={exercise.duration || ''}
-                    onChange={(e) => updateExercise(index, { 
-                      duration: e.target.value ? parseInt(e.target.value) : undefined 
+                    onChange={(e) => updateExercise(index, {
+                      duration: e.target.value ? parseInt(e.target.value) : undefined
                     })}
                     placeholder="Optional"
                   />
@@ -230,8 +230,8 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                     min="0"
                     max="600"
                     value={exercise.rest || ''}
-                    onChange={(e) => updateExercise(index, { 
-                      rest: e.target.value ? parseInt(e.target.value) : undefined 
+                    onChange={(e) => updateExercise(index, {
+                      rest: e.target.value ? parseInt(e.target.value) : undefined
                     })}
                     placeholder="Optional"
                   />
@@ -260,7 +260,7 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
   const renderMobileView = () => (
     <Accordion type="single" collapsible className="w-full">
       {exercises.map((exercise, index) => (
-        <AccordionItem key={exercise.id} value={exercise.id}>
+        <AccordionItem key={exercise.id ?? index} value={exercise.id ?? String(index)}>
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center gap-3 flex-1 text-left">
               <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
@@ -299,11 +299,11 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                     type="number"
                     min="1"
                     max="1000"
-                    value={exercise.reps || ''}
-                    onChange={(e) => updateExercise(index, { 
-                      reps: e.target.value ? parseInt(e.target.value) : undefined 
+                    value={exercise.reps ?? ''}
+                    onChange={(e) => updateExercise(index, {
+                      reps: e.target.value ? parseInt(e.target.value) : undefined
                     })}
-                    placeholder="Optional"
+                    placeholder="e.g. 10"
                     className="h-8"
                   />
                 </div>
@@ -315,8 +315,8 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                     min="1"
                     max="3600"
                     value={exercise.duration || ''}
-                    onChange={(e) => updateExercise(index, { 
-                      duration: e.target.value ? parseInt(e.target.value) : undefined 
+                    onChange={(e) => updateExercise(index, {
+                      duration: e.target.value ? parseInt(e.target.value) : undefined
                     })}
                     placeholder="Optional"
                     className="h-8"
@@ -330,8 +330,8 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
                     min="0"
                     max="600"
                     value={exercise.rest || ''}
-                    onChange={(e) => updateExercise(index, { 
-                      rest: e.target.value ? parseInt(e.target.value) : undefined 
+                    onChange={(e) => updateExercise(index, {
+                      rest: e.target.value ? parseInt(e.target.value) : undefined
                     })}
                     placeholder="Optional"
                     className="h-8"

@@ -32,9 +32,11 @@ model User {
   assignedClients    TrainerClient[]     @relation("TrainerToClients")
   assignedWorkouts   WorkoutAssignment[] @relation("AssignedWorkouts")
   trainerAssignments WorkoutAssignment[] @relation("TrainerAssignments")
-  trainerProfile     TrainerProfile?
-  createdWorkouts    Workout[]           @relation("WorkoutCreator")
-  workoutLogs        WorkoutLog[]
+  trainerProfile        TrainerProfile?
+  verificationRequest   TrainerVerificationRequest?
+  createdWorkouts       Workout[]           @relation("WorkoutCreator")
+  createdExercises      Exercise[]          @relation("ExerciseCreator")
+  workoutLogs           WorkoutLog[]
 
   @@index([email])
   @@index([role])
@@ -146,6 +148,7 @@ model Exercise {
   approvedById     String?
   exerciseLogs     ExerciseLog[]
   workoutExercises WorkoutExercise[]
+  createdBy        User?             @relation("ExerciseCreator", fields: [createdById], references: [id])
 
   @@index([name])
   @@index([isPublic])
@@ -164,14 +167,19 @@ model Workout {
   createdById   String?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+  approvalStatus ApprovalStatus     @default(APPROVED)
+  rejectionReason String?
+  approvedAt    DateTime?
   createdBy     User?               @relation("WorkoutCreator", fields: [createdById], references: [id])
   exercises     WorkoutExercise[]
   workoutLogs   WorkoutLog[]
   assignments   WorkoutAssignment[]
+  courseSessions CourseSession[]
 
   @@index([isPublic])
   @@index([isTemplate])
   @@index([createdById])
+  @@index([approvalStatus])
 }
 
 model WorkoutExercise {
@@ -268,20 +276,21 @@ model Food {
 }
 
 model MealPlan {
-  id             String         @id @default(cuid())
+  id             String          @id @default(cuid())
   name           String
   description    String?
   targetCalories Float?
   targetProtein  Float?
   targetCarbs    Float?
   targetFats     Float?
-  cycleDays      Int            @default(7) // Number of days in the cycle (7 for weekly, 14/28/30 for longer cycles)
-  isTemplate     Boolean        @default(true)
-  isPublic       Boolean        @default(true)
+  cycleDays      Int             @default(7)
+  isTemplate     Boolean         @default(true)
+  isPublic       Boolean         @default(true)
   createdById    String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   meals          MealPlanFood[]
+  courseSessions CourseSession[]
 
   @@index([isPublic])
 }
@@ -344,6 +353,30 @@ model TrainerProfile {
   @@index([isVerified])
 }
 
+model TrainerVerificationRequest {
+  id              String                    @id @default(cuid())
+  trainerId       String                    @unique
+  status          VerificationRequestStatus @default(PENDING)
+  fullName        String
+  phoneNumber     String
+  yearsExperience Int
+  specializations String[]
+  certifications  String[]
+  bio             String
+  certificateUrl  String?
+  socialLinks     String?
+  adminNote       String?
+  submittedAt     DateTime                  @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  trainer         User                      @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([trainerId])
+  @@index([status])
+}
+
 model TrainerClient {
   id        String       @id @default(cuid())
   trainerId String
@@ -398,10 +431,46 @@ model Course {
   updatedAt        DateTime           @updatedAt
   trainer          User               @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   enrollments      CourseEnrollment[]
+  weeks            CourseWeek[]
 
   @@index([trainerId])
   @@index([isPublished])
   @@index([category])
+}
+
+model CourseWeek {
+  id          String          @id @default(cuid())
+  courseId    String
+  weekNumber  Int
+  title       String?
+  description String?
+  course      Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sessions    CourseSession[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([courseId, weekNumber])
+  @@index([courseId])
+}
+
+model CourseSession {
+  id         String      @id @default(cuid())
+  weekId     String
+  dayNumber  Int
+  order      Int         @default(0)
+  title      String?
+  notes      String?
+  workoutId  String?
+  mealPlanId String?
+  week       CourseWeek  @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  workout    Workout?    @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  mealPlan   MealPlan?   @relation(fields: [mealPlanId], references: [id], onDelete: SetNull)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([weekId])
+  @@index([workoutId])
+  @@index([mealPlanId])
 }
 
 model CourseEnrollment {
@@ -517,6 +586,12 @@ enum Role {
 }
 
 enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VerificationRequestStatus {
   PENDING
   APPROVED
   REJECTED

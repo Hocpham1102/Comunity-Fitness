@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings,
   Shield,
+  ShieldCheck,
   Dumbbell,
   Activity,
   UtensilsCrossed,
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Exercises', href: '/admin/exercises', icon: Activity },
   { name: 'Foods', href: '/admin/foods', icon: UtensilsCrossed },
   { name: 'Trainers', href: '/admin/trainers', icon: UserCheck },
+  { name: 'Content Review', href: '/admin/content', icon: ShieldCheck },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Subscriptions', href: '/admin/subscriptions', icon: Shield },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -41,7 +43,9 @@ export function AdminSidebar() {
 
       <nav className="flex-1 px-2 py-4 space-y-1">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = item.href === '/admin'
+            ? pathname === item.href
+            : pathname.startsWith(item.href)
           return (
             <Link
               key={item.name}

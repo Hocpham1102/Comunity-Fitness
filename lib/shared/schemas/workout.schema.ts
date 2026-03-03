@@ -62,13 +62,7 @@ export const workoutExerciseConfigSchema = z.object({
   duration: z.number().int().min(1, 'Duration must be positive').max(3600, 'Duration too long').optional(), // in seconds
   rest: z.number().int().min(0, 'Rest time cannot be negative').max(600, 'Rest time too long').optional(), // in seconds
   notes: z.string().max(500, 'Notes too long').optional(),
-}).refine(
-  (data) => data.reps || data.duration,
-  {
-    message: 'Either reps or duration must be specified',
-    path: ['reps'],
-  }
-)
+})
 
 // Workout basics schema
 export const workoutBasicsSchema = z.object({

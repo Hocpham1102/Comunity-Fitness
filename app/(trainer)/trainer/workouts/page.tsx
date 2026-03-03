@@ -15,7 +15,8 @@ interface Workout {
     description?: string | null
     difficulty?: string | null
     estimatedTime?: number | null
-    exercises?: any[]
+    approvalStatus?: string | null
+    _count?: { exercises: number }
 }
 
 export default function TrainerWorkoutsPage() {
@@ -36,7 +37,7 @@ export default function TrainerWorkoutsPage() {
                 throw new Error('Failed to fetch workouts')
             }
             const data = await response.json()
-            setWorkouts(data.data || [])
+            setWorkouts(data.items || [])
         } catch (error) {
             console.error('Error fetching workouts:', error)
             toast.error('Failed to load workout templates')
@@ -140,7 +141,7 @@ export default function TrainerWorkoutsPage() {
                             description={workout.description}
                             difficulty={workout.difficulty}
                             estimatedTime={workout.estimatedTime}
-                            exercisesCount={workout.exercises?.length ?? 0}
+                            exercisesCount={workout._count?.exercises ?? 0}
                             onDelete={handleDelete}
                             onAssign={handleAssign}
                         />

@@ -29,6 +29,10 @@ export async function createWorkout(userId: string, data: CreateWorkoutData, use
   // Admins and Trainers can create templates, regular users create custom workouts
   const isTemplate = userRole === 'ADMIN' || userRole === 'TRAINER'
 
+  // Trainer-submitted content requires admin moderation
+  const approvalStatus = userRole === 'TRAINER' ? 'PENDING' : 'APPROVED'
+  const isPublic = userRole === 'TRAINER' ? false : (data.isPublic ?? true)
+
   const created = await db.$transaction(async (tx) => {
     const workout = await tx.workout.create({
       data: {
@@ -37,10 +41,12 @@ export async function createWorkout(userId: string, data: CreateWorkoutData, use
         difficulty: data.difficulty,
         estimatedTime: data.estimatedTime,
         isTemplate, // Use computed value instead of client data
-        isPublic: data.isPublic,
+        isPublic,
+        approvalStatus: approvalStatus as any,
         createdById: userId,
       },
     })
+
 
     if (data.exercises?.length) {
       // Validate all exerciseIds exist to avoid FK errors

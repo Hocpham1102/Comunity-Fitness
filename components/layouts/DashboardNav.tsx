@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -23,6 +24,9 @@ interface DashboardNavProps {
 export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: DashboardNavProps) {
   const { data: session } = useSession()
   const { avatarUrl } = useAvatar()
+
+  const isTrainer = session?.user?.role === 'TRAINER'
+  const isAdmin = session?.user?.role === 'ADMIN'
 
   // Generate initials from name or email
   const getInitials = () => {
@@ -80,23 +84,39 @@ export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: Dashboar
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="flex items-center justify-start gap-2 p-2">
-                <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{session?.user?.name || 'User'}</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">
-                    {session?.user?.email || ''}
-                  </p>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium">{session?.user?.name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{session?.user?.email || ''}</p>
                 </div>
-              </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-              </DropdownMenuItem>
+
+              {/* Trainer-specific items */}
+              {isTrainer && (
+                <DropdownMenuItem asChild>
+                  <Link href="/trainer/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
+
+              {/* Admin & Client items */}
+              {!isTrainer && (
+                <DropdownMenuItem asChild>
+                  <Link href={isAdmin ? '/admin/settings' : '/settings'} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
+              <DropdownMenuItem
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="text-destructive focus:text-destructive cursor-pointer"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
