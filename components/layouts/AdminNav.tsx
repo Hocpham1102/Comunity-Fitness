@@ -5,9 +5,11 @@ import { Badge } from '@/components/ui/badge'
 import { Bell, AlertTriangle, LogOut, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
+import { useCartStore } from '@/lib/store/cart'
 
 export function AdminNav() {
   const handleLogout = async () => {
+    useCartStore.getState().clearCart()
     await signOut({ callbackUrl: '/login' })
   }
 

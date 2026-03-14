@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Plus, CalendarDays, CalendarRange, CalendarClock, Trash2, Edit } from "lucide-react"
+import { Calendar, Plus, CalendarDays, CalendarRange, CalendarClock, Trash2, Edit, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from 'sonner'
 import {
@@ -50,6 +50,7 @@ export default function MealSchedulePage() {
     const [deleting, setDeleting] = useState(false)
     const [formOpen, setFormOpen] = useState(false)
     const [editingSchedule, setEditingSchedule] = useState<MealSchedule | null>(null)
+    const [settingActive, setSettingActive] = useState<string | null>(null)
 
     const fetchSchedules = async () => {
         try {
@@ -69,6 +70,24 @@ export default function MealSchedulePage() {
     useEffect(() => {
         fetchSchedules()
     }, [])
+
+    const handleSetActive = async (id: string) => {
+        setSettingActive(id)
+        try {
+            const res = await fetch(`/api/meal-schedules/${id}/set-active`, { method: 'PATCH' })
+            if (res.ok) {
+                toast.success('Đã chọn lịch active!')
+                // Update local state immediately without refetch
+                setSchedules(prev => prev.map(s => ({ ...s, isActive: s.id === id })))
+            } else {
+                toast.error('Không thể set active')
+            }
+        } catch {
+            toast.error('Lỗi kết nối')
+        } finally {
+            setSettingActive(null)
+        }
+    }
 
     const handleDelete = async () => {
         if (!deleteId) return
@@ -147,6 +166,14 @@ export default function MealSchedulePage() {
                     </div>
                 </div>
 
+                {/* Active schedule hint */}
+                {schedules.length > 1 && (
+                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/5 border border-primary/20 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                        Bấm <span className="font-semibold text-foreground mx-1">Set Active</span> để chọn lịch đang theo dõi.
+                    </div>
+                )}
+
                 {/* Schedules List */}
                 {schedules.length === 0 ? (
                     <Card>
@@ -162,21 +189,28 @@ export default function MealSchedulePage() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {schedules.map((schedule) => {
                             const Icon = SCHEDULE_TYPE_ICONS[schedule.scheduleType]
+                            const isActive = schedule.isActive
                             return (
-                                <Card key={schedule.id} className="hover:shadow-lg transition-shadow">
+                                <Card
+                                    key={schedule.id}
+                                    className={`hover:shadow-lg transition-all ${isActive ? 'border-primary/50 shadow-primary/10 shadow-md' : ''}`}
+                                >
                                     <CardHeader>
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <CardTitle className="flex items-center gap-2 mb-2">
-                                                    <Icon className="w-5 h-5 text-primary" />
+                                                    <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                                                     {schedule.name}
                                                 </CardTitle>
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-2 flex-wrap">
                                                     <Badge variant="secondary">
                                                         {SCHEDULE_TYPE_LABELS[schedule.scheduleType]}
                                                     </Badge>
-                                                    {schedule.isActive && (
-                                                        <Badge variant="default">Active</Badge>
+                                                    {isActive && (
+                                                        <Badge className="gap-1 bg-primary/10 text-primary border-primary/30 hover:bg-primary/20">
+                                                            <CheckCircle2 className="w-3 h-3" />
+                                                            Active
+                                                        </Badge>
                                                     )}
                                                 </div>
                                             </div>
@@ -221,11 +255,31 @@ export default function MealSchedulePage() {
                                                 <span className="font-semibold">{schedule.scheduledMeals.length}</span>
                                             </div>
                                         </div>
-                                        <Button className="w-full mt-4" asChild>
-                                            <Link href={`/nutrition/schedule/${schedule.id}`}>
-                                                View Details
-                                            </Link>
-                                        </Button>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-2 mt-4">
+                                            {!isActive && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1 gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                                                    onClick={() => handleSetActive(schedule.id)}
+                                                    disabled={settingActive === schedule.id}
+                                                >
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    {settingActive === schedule.id ? 'Đang set...' : 'Set Active'}
+                                                </Button>
+                                            )}
+                                            <Button
+                                                className={`${isActive ? 'w-full' : 'flex-1'}`}
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link href={`/nutrition/schedule/${schedule.id}`}>
+                                                    View Details
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             )

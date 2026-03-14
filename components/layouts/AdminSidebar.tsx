@@ -14,6 +14,8 @@ import {
   Dumbbell,
   Activity,
   UtensilsCrossed,
+  ShoppingCart,
+  CircleDollarSign
 } from 'lucide-react'
 
 const navigation = [
@@ -23,6 +25,8 @@ const navigation = [
   { name: 'Exercises', href: '/admin/exercises', icon: Activity },
   { name: 'Foods', href: '/admin/foods', icon: UtensilsCrossed },
   { name: 'Trainers', href: '/admin/trainers', icon: UserCheck },
+  { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Payout Requests', href: '/admin/payouts', icon: CircleDollarSign },
   { name: 'Content Review', href: '/admin/content', icon: ShieldCheck },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Subscriptions', href: '/admin/subscriptions', icon: Shield },

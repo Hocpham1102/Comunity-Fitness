@@ -43,6 +43,7 @@ export default function TrainerProfilePage() {
     const [trainer, setTrainer] = useState<TrainerProfile | null>(null)
     const [courses, setCourses] = useState<Course[]>([])
     const [loading, setLoading] = useState(true)
+    const [notFound, setNotFound] = useState(false)
 
     useEffect(() => {
         if (trainerId) {
@@ -52,9 +53,14 @@ export default function TrainerProfilePage() {
 
     const fetchTrainerData = async () => {
         setLoading(true)
+        setNotFound(false)
         try {
-            // Fetch trainer profile
-            const trainerRes = await fetch(`/api/profile?userId=${trainerId}`)
+            // Fetch trainer public profile (only verified trainers)
+            const trainerRes = await fetch(`/api/trainers/${trainerId}`)
+            if (trainerRes.status === 404) {
+                setNotFound(true)
+                return
+            }
             if (trainerRes.ok) {
                 const trainerData = await trainerRes.json()
                 setTrainer(trainerData)
@@ -68,6 +74,7 @@ export default function TrainerProfilePage() {
             }
         } catch (error) {
             console.error('Error fetching trainer data:', error)
+            setNotFound(true)
         } finally {
             setLoading(false)
         }
@@ -87,16 +94,20 @@ export default function TrainerProfilePage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-[60vh]">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         )
     }
 
-    if (!trainer) {
+    if (notFound || !trainer) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <p className="text-center text-muted-foreground">Trainer not found</p>
+            <div className="container mx-auto px-4 py-16 text-center">
+                <div className="text-6xl mb-4">🔒</div>
+                <h2 className="text-2xl font-bold mb-2">Trainer Not Available</h2>
+                <p className="text-muted-foreground mb-6">
+                    This trainer profile is not available or has not been verified yet.
+                </p>
             </div>
         )
     }

@@ -142,9 +142,17 @@ export async function updateNutritionTargets(
     targets: NutritionTargets,
     isCustom: boolean
 ): Promise<void> {
-    await db.profile.update({
+    await db.profile.upsert({
         where: { userId },
-        data: {
+        update: {
+            targetCalories: targets.targetCalories,
+            targetProtein: targets.targetProtein,
+            targetCarbs: targets.targetCarbs,
+            targetFats: targets.targetFats,
+            useCustomTargets: isCustom,
+        },
+        create: {
+            userId,
             targetCalories: targets.targetCalories,
             targetProtein: targets.targetProtein,
             targetCarbs: targets.targetCarbs,

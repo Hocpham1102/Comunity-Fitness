@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Clock, DollarSign, Users, TrendingUp } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 interface CourseCardProps {
     course: {
@@ -92,10 +93,12 @@ export function CourseCard({ course }: CourseCardProps) {
                 </div>
             </CardContent>
             <CardFooter className="p-4 pt-0">
-                <Button className="w-full gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Enroll Now
-                </Button>
+                <Link href={`/courses/${course.id}`} className="w-full">
+                    <Button className="w-full gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Enroll Now
+                    </Button>
+                </Link>
             </CardFooter>
         </Card>
     )

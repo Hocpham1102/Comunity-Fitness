@@ -29,8 +29,10 @@ import {
     Settings,
     LogOut,
     ChevronUp,
+    Wallet
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useCartStore } from '@/lib/store/cart'
 
 const navigation = [
     { name: 'Dashboard', href: '/trainer/dashboard', icon: Home },
@@ -39,6 +41,7 @@ const navigation = [
     { name: 'My Exercises', href: '/trainer/exercises', icon: Activity },
     { name: 'Meal Plans', href: '/trainer/nutrition', icon: Apple },
     { name: 'My Courses', href: '/trainer/courses', icon: BookOpen },
+    { name: 'Wallet & Payouts', href: '/trainer/wallet', icon: Wallet },
     { name: 'Analytics', href: '/trainer/analytics', icon: BarChart3 },
     { name: 'Verification', href: '/trainer/verification', icon: ShieldCheck, sublabel: 'Unlock features' },
     { name: 'Trainer Profile', href: '/trainer/profile', icon: User, sublabel: 'Your public info' },
@@ -233,7 +236,10 @@ export function TrainerSidebar({ sidebarOpen, setSidebarOpen, isMobile }: Traine
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    onClick={() => signOut({ callbackUrl: '/' })}
+                                    onClick={() => {
+                                        useCartStore.getState().clearCart()
+                                        signOut({ callbackUrl: '/' })
+                                    }}
                                     className="text-destructive focus:text-destructive cursor-pointer"
                                 >
                                     <LogOut className="mr-2 h-4 w-4" />

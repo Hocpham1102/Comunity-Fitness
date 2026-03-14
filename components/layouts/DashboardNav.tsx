@@ -10,10 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Bell, Menu, X, Settings, LogOut } from 'lucide-react'
+import { Bell, Menu, X, Settings, LogOut, ShoppingBag } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useAvatar } from '@/contexts/avatar-context'
+import { CartSheet } from '@/components/features/cart/CartSheet'
+import { useCartStore } from '@/lib/store/cart'
 
 interface DashboardNavProps {
   sidebarOpen: boolean
@@ -73,6 +75,9 @@ export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: Dashboar
             </span>
           </Button>
 
+          {/* Cart */}
+          <CartSheet />
+
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -104,17 +109,28 @@ export function DashboardNav({ sidebarOpen, setSidebarOpen, isMobile }: Dashboar
 
               {/* Admin & Client items */}
               {!isTrainer && (
-                <DropdownMenuItem asChild>
-                  <Link href={isAdmin ? '/admin/settings' : '/settings'} className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/courses?tab=history" className="cursor-pointer">
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      <span>My Orders</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={isAdmin ? '/admin/settings' : '/settings'} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </>
               )}
 
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => {
+                  useCartStore.getState().clearCart()
+                  signOut({ callbackUrl: '/' })
+                }}
                 className="text-destructive focus:text-destructive cursor-pointer"
               >
                 <LogOut className="mr-2 h-4 w-4" />

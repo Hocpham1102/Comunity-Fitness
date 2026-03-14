@@ -37,6 +37,11 @@ model User {
   createdWorkouts       Workout[]           @relation("WorkoutCreator")
   createdExercises      Exercise[]          @relation("ExerciseCreator")
   workoutLogs           WorkoutLog[]
+  orders                Order[]
+  cart                  Cart?
+  transactions          Transaction[]
+  payoutRequests        PayoutRequest[]     @relation("TrainerPayouts")
+  processedPayouts      PayoutRequest[]     @relation("AdminPayouts")
 
   @@index([email])
   @@index([role])
@@ -345,6 +350,10 @@ model TrainerProfile {
   websiteUrl         String?
   isVerified         Boolean  @default(false)
   isAcceptingClients Boolean  @default(true)
+  bankName           String?
+  accountNumber      String?
+  accountName        String?
+  walletBalance      Float    @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -432,6 +441,8 @@ model Course {
   trainer          User               @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   enrollments      CourseEnrollment[]
   weeks            CourseWeek[]
+  orderItems       OrderItem[]
+  cartItems        CartItem[]
 
   @@index([trainerId])
   @@index([isPublished])
@@ -577,6 +588,102 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  totalAmount   Float
+  currency      String      @default("VND")
+  status        OrderStatus @default(PENDING)
+  paymentMethod String?     @default("VIETQR")
+  paymentMemo   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  courseId  String
+  price     Float
+  currency  String   @default("VND")
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([courseId])
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  userId      String
+  amount      Float
+  type        TransactionType
+  status      TransactionStatus @default(PENDING)
+  description String?
+  referenceId String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+model PayoutRequest {
+  id            String       @id @default(cuid())
+  trainerId     String
+  amount        Float
+  status        PayoutStatus @default(PENDING)
+  bankName      String
+  accountNumber String
+  accountName   String
+  adminNote     String?
+  reviewedById  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  trainer       User         @relation("TrainerPayouts", fields: [trainerId], references: [id], onDelete: Cascade)
+  reviewedBy    User?        @relation("AdminPayouts", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([trainerId])
+  @@index([status])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  courseId  String
+  createdAt DateTime @default(now())
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, courseId])
+  @@index([cartId])
+  @@index([courseId])
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 }
 
 enum Role {
@@ -736,6 +843,23 @@ enum AchievementType {
   NUTRITION
 }
 
+enum TransactionType {
+  EARNING
+  WITHDRAWAL
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum AchievementTier {
   BRONZE
   SILVER
@@ -780,6 +904,7 @@ model MealSchedule {
   @@index([userId])
   @@index([scheduleType])
   @@index([isActive])
+  @@unique([userId, name, startDate])
 }
 
 model ScheduledMeal {

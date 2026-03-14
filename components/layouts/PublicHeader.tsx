@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/lib/client/hooks/useIsMobile'
+import { CartSheet } from '@/components/features/cart/CartSheet'
 
 export function PublicHeader() {
   const isMobile = useIsMobile()
@@ -42,6 +43,7 @@ export function PublicHeader() {
 
           {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
+            <CartSheet />
             <Button variant="ghost" asChild>
               <Link href="/login">Sign In</Link>
             </Button>

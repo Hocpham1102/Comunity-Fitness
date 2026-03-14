@@ -6,8 +6,10 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { SessionProvider } from 'next-auth/react'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { Toaster as SonnerToaster } from 'sonner'
 import { NotificationsProvider } from '@/providers/notifications-provider'
 import { AvatarProvider } from '@/contexts/avatar-context'
+import { CartSync } from '@/components/features/cart/CartSync'
 import './globals.css'
 
 export const viewport = {
@@ -97,8 +99,10 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <NotificationsProvider>
+                <CartSync />
                 {children}
                 <Toaster />
+                <SonnerToaster position="top-right" richColors />
                 <Analytics />
                 <SpeedInsights />
               </NotificationsProvider>

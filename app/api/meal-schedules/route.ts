@@ -63,6 +63,12 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Unset tất cả active schedules cũ, rồi tạo mới active trong 1 transaction
+        await db.mealSchedule.updateMany({
+            where: { userId: session.user.id, isActive: true },
+            data: { isActive: false },
+        })
+
         const schedule = await db.mealSchedule.create({
             data: {
                 userId: session.user.id,

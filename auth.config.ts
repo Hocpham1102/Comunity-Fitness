@@ -16,7 +16,7 @@ export const authConfig = {
       const isOnWorkouts = nextUrl.pathname.startsWith('/workouts')
       const isOnNutrition = nextUrl.pathname.startsWith('/nutrition')
       const isOnProgress = nextUrl.pathname.startsWith('/progress')
-      const isOnTrainerDashboard = nextUrl.pathname.startsWith('/trainer')
+      const isOnTrainerDashboard = nextUrl.pathname.startsWith('/trainer/')
       const isOnPublic = nextUrl.pathname.startsWith('/') && !nextUrl.pathname.startsWith('/api')
       const isOnLogin = nextUrl.pathname === '/login'
 

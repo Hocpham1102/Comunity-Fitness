@@ -13,6 +13,9 @@ import {
   BarChart3,
   User,
   Users,
+  BookOpen,
+  GraduationCap,
+  ShoppingBag,
   X,
 } from 'lucide-react'
 
@@ -20,6 +23,8 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Workouts', href: '/workouts', icon: Dumbbell },
   { name: 'Nutrition', href: '/nutrition', icon: Apple },
+  { name: 'Courses', href: '/courses', icon: BookOpen },
+  { name: 'My Courses', href: '/my-courses', icon: GraduationCap },
   { name: 'Progress', href: '/progress', icon: BarChart3 },
   { name: 'Profile', href: '/profile', icon: User },
   { name: 'Trainers', href: '/trainers', icon: Users },
