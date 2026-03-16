@@ -17,6 +17,7 @@ import {
   GraduationCap,
   ShoppingBag,
   X,
+  UserPlus,
 } from 'lucide-react'
 
 const navigation = [
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Progress', href: '/progress', icon: BarChart3 },
   { name: 'Profile', href: '/profile', icon: User },
   { name: 'Trainers', href: '/trainers', icon: Users },
+  { name: 'Invitations', href: '/invitations', icon: UserPlus },
 ]
 
 interface DashboardSidebarProps {

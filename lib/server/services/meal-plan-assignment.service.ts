@@ -7,6 +7,7 @@ import { db } from '@/lib/server/db/prisma'
 import { ScheduleType } from '@prisma/client'
 import { getMealPlanById } from './meal-plans.service'
 import { addDays, addWeeks, addMonths } from 'date-fns'
+import { createNotification } from './notification.service'
 
 export interface CreateScheduleFromPlanInput {
     planId: string
@@ -48,14 +49,12 @@ export async function assignMealPlanToClient(
     }
 
     // Create notification for the client
-    await db.notification.create({
-        data: {
-            userId: clientId,
-            type: 'MEAL_PLAN_ASSIGNED',
-            title: 'New Meal Plan Assigned',
-            message: `Your trainer has assigned you the meal plan: ${plan.name}`,
-            link: `/nutrition`, // Link to nutrition page where they can view schedules
-        },
+    await createNotification({
+        userId: clientId,
+        type: 'MEAL_PLAN_ASSIGNED',
+        title: 'New Meal Plan',
+        message: `Your trainer has assigned the meal plan: ${plan.name}`,
+        link: `/nutrition`, // Link to nutrition page where they can view schedules
     })
 
     return { success: true, message: 'Meal plan assigned successfully' }
@@ -131,14 +130,12 @@ export async function createScheduleFromPlan(input: CreateScheduleFromPlanInput)
     })
 
     // Create notification
-    await db.notification.create({
-        data: {
-            userId: clientId,
-            type: 'MEAL_PLAN_ASSIGNED',
-            title: 'Meal Schedule Created',
-            message: `Your trainer has created a meal schedule: ${schedule.name}`,
-            link: `/nutrition`,
-        },
+    await createNotification({
+        userId: clientId,
+        type: 'MEAL_PLAN_ASSIGNED',
+        title: 'New Meal Schedule',
+        message: `Your trainer has created a meal schedule: ${schedule.name}`,
+        link: `/nutrition`,
     })
 
     return schedule

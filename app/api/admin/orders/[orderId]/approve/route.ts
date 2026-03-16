@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/server/db/prisma'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { createNotification } from '@/lib/server/services/notification.service'
 
 export async function POST(
     req: Request,
@@ -60,6 +61,32 @@ export async function POST(
                 })
             }
         })
+
+        // Notify user about order approval
+        await createNotification({
+            userId: order.userId,
+            type: 'SYSTEM',
+            title: 'Order Approved',
+            message: `Your payment has been confirmed. You can now start learning.`,
+            link: '/my-courses',
+        })
+
+        // Notify trainers about new enrollments
+        for (const item of order.items) {
+            const course = await db.course.findUnique({
+                where: { id: item.courseId },
+                select: { title: true, trainerId: true }
+            })
+            if (course?.trainerId) {
+                await createNotification({
+                    userId: course.trainerId,
+                    type: 'SYSTEM',
+                    title: 'New Student',
+                    message: `A new student has enrolled in your course "${course.title}".`,
+                    link: '/trainer/courses',
+                })
+            }
+        }
 
         revalidatePath('/admin/orders')
         // We redirect back to the orders page since this is called from a form action

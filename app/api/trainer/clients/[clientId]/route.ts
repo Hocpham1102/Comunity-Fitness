@@ -4,7 +4,7 @@ import { db } from '@/lib/server/db/prisma'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { clientId: string } }
+    { params }: { params: Promise<{ clientId: string }> }
 ) {
     try {
         const session = await auth()
@@ -23,7 +23,7 @@ export async function GET(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        const { clientId } = params
+        const { clientId } = await params;
 
         // Verify trainer has access to this client
         const relationship = await db.trainerClient.findFirst({
@@ -133,7 +133,7 @@ export async function GET(
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { clientId: string } }
+    { params }: { params: Promise<{ clientId: string }> }
 ) {
     try {
         const session = await auth()
@@ -152,7 +152,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        const { clientId } = params
+        const { clientId } = await params;
         const body = await req.json()
         const { status, notes, endDate } = body
 
@@ -185,7 +185,7 @@ export async function PATCH(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { clientId: string } }
+    { params }: { params: Promise<{ clientId: string }> }
 ) {
     try {
         const session = await auth()
@@ -204,7 +204,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        const { clientId } = params
+        const { clientId } = await params
 
         // Delete trainer-client relationship
         const deleted = await db.trainerClient.deleteMany({

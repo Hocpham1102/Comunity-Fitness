@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/server/auth/session'
 import { db } from '@/lib/server/db/prisma'
 import { z } from 'zod'
+import { createNotification } from '@/lib/server/services/notification.service'
 
 const assignWorkoutSchema = z.object({
     clientIds: z.array(z.string()).min(1, 'At least one client must be selected'),
@@ -93,6 +94,17 @@ export async function POST(
                 })
             )
         )
+
+        // Notify clients
+        for (const clientId of clientIds) {
+            await createNotification({
+                userId: clientId,
+                type: 'WORKOUT_ASSIGNED',
+                title: 'New Workout',
+                message: `Your trainer has assigned the workout "${workout.name}" to you.`,
+                link: '/workouts',
+            })
+        }
 
         return NextResponse.json(
             {

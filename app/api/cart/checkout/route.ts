@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/server/db/prisma'
 import { auth } from '@/auth'
+import { createNotification } from '@/lib/server/services/notification.service'
 
 export async function POST(req: Request) {
     try {
@@ -77,6 +78,28 @@ export async function POST(req: Request) {
                 })),
                 skipDuplicates: true,
             })
+
+            // Notify user
+            await createNotification({
+                userId,
+                type: 'SYSTEM',
+                title: 'Enrollment Successful',
+                message: `You have successfully enrolled in ${courses.length} free course(s).`,
+                link: '/my-courses',
+            })
+
+            // Notify trainers
+            for (const course of courses as any[]) {
+                if (course.trainerId) {
+                    await createNotification({
+                        userId: course.trainerId,
+                        type: 'SYSTEM',
+                        title: 'New Student',
+                        message: `A new student has enrolled in your course "${course.title}".`,
+                        link: '/trainer/courses',
+                    })
+                }
+            }
 
             return NextResponse.json({
                 success: true,

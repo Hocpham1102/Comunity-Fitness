@@ -3,16 +3,17 @@ import { db } from '@/lib/server/db/prisma'
 
 export async function GET(
     request: Request,
-    { params }: { params: { trainerId: string } }
+    { params }: { params: Promise<{ trainerId: string }> }
 ) {
     try {
+        const { trainerId } = await params
         const { searchParams } = new URL(request.url)
         const category = searchParams.get('category')
         const difficulty = searchParams.get('difficulty')
 
         // Build where clause
         const where = {
-            trainerId: params.trainerId,
+            trainerId,
             isPublished: true,
             ...(category && { category: category as any }),
             ...(difficulty && { difficulty: difficulty as any }),

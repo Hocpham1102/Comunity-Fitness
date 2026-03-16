@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/server/db/prisma'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { createNotification } from '@/lib/server/services/notification.service'
 
 export async function POST(
     req: Request,
@@ -30,6 +31,15 @@ export async function POST(
         await db.order.update({
             where: { id: orderId },
             data: { status: 'CANCELLED' }
+        })
+
+        // Notify user about order cancellation
+        await createNotification({
+            userId: order.userId,
+            type: 'SYSTEM',
+            title: 'Order Declined',
+            message: `Your payment order has been declined. Please contact support for more details.`,
+            link: '/my-courses',
         })
 
         revalidatePath('/admin/orders')

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { db } from '@/lib/server/db/prisma'
+import { createNotification } from '@/lib/server/services/notification.service'
 
 export async function GET(req: NextRequest) {
     try {
@@ -137,7 +138,19 @@ export async function POST(req: NextRequest) {
                         image: true,
                     },
                 },
+                trainer: {
+                    select: { name: true },
+                },
             },
+        })
+
+        // Notify the client about the invitation
+        await createNotification({
+            userId: client.id,
+            type: 'SYSTEM',
+            title: 'Trainer Invitation',
+            message: `${trainerClient.trainer.name ?? 'A trainer'} has invited you to become their client.`,
+            link: `/invitations`,
         })
 
         return NextResponse.json(trainerClient, { status: 201 })

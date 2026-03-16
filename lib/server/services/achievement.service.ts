@@ -6,6 +6,7 @@ import {
     getAchievementsByType,
     TIER_POINTS,
 } from "@/lib/constants/achievements";
+import { createNotification } from "./notification.service";
 
 /**
  * Initialize all achievements for a new user
@@ -59,6 +60,7 @@ export async function updateAchievementProgress(
     const unlockedAchievements = [];
 
     for (const achievement of achievements) {
+        // Update progress
         await db.achievement.update({
             where: { id: achievement.id },
             data: { progress: newValue },
@@ -75,6 +77,15 @@ export async function updateAchievementProgress(
                 },
             });
             unlockedAchievements.push(unlocked);
+
+            // Notify user about achievement unlock
+            await createNotification({
+                userId,
+                type: 'ACHIEVEMENT',
+                title: 'Achievement Unlocked',
+                message: `Congratulations! You have unlocked the achievement: ${achievement.title}`,
+                link: '/profile', // or wherever achievements are shown
+            });
         }
     }
 
