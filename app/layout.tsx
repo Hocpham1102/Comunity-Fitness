@@ -10,6 +10,7 @@ import { Toaster as SonnerToaster } from 'sonner'
 import { NotificationsProvider } from '@/providers/notifications-provider'
 import { AvatarProvider } from '@/contexts/avatar-context'
 import { CartSync } from '@/components/features/cart/CartSync'
+import { GoogleTranslateFix } from '@/components/GoogleTranslateFix'
 import './globals.css'
 
 export const viewport = {
@@ -90,6 +91,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+        <GoogleTranslateFix />
         <SessionProvider>
           <AvatarProvider>
             <ThemeProvider

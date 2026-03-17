@@ -135,7 +135,14 @@ export default function CourseCard({
                 </Link>
 
                 {/* Secondary actions */}
-                <div className="grid grid-cols-3 gap-2 w-full">
+                <div className="grid grid-cols-4 gap-2 w-full">
+                    <Link href={`/trainer/courses/${id}/students`} prefetch={false}>
+                        <Button size="sm" variant="outline" className="w-full gap-1.5 text-xs px-2">
+                            <Users className="w-3 h-3" />
+                            Students
+                        </Button>
+                    </Link>
+
                     <Button
                         size="sm"
                         variant="outline"
