@@ -136,18 +136,18 @@ export default function CourseStudentsPage({ params }: { params: Promise<{ id: s
                                     return (
                                         <tr key={student.id} className="hover:bg-muted/30 transition-colors">
                                             <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-10 w-10">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <Avatar className="h-10 w-10 shrink-0">
                                                         <AvatarImage src={student.image || undefined} />
                                                         <AvatarFallback className="bg-primary/10 text-primary">
                                                             {initials}
                                                         </AvatarFallback>
                                                     </Avatar>
-                                                    <div>
-                                                        <div className="font-medium text-foreground">{student.name}</div>
-                                                        <div className="flex items-center text-xs text-muted-foreground mt-0.5 gap-1">
-                                                            <Mail className="w-3 h-3" />
-                                                            {student.email}
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-foreground truncate">{student.name}</div>
+                                                        <div className="flex items-center text-xs text-muted-foreground mt-0.5 gap-1 truncate">
+                                                            <Mail className="w-3 h-3 shrink-0" />
+                                                            <span className="truncate">{student.email}</span>
                                                         </div>
                                                     </div>
                                                 </div>

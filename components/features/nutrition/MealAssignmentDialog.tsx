@@ -148,11 +148,11 @@ export function MealAssignmentDialog({
                                         {selectedFood.description && (
                                             <p className="text-sm text-muted-foreground mb-3">{selectedFood.description}</p>
                                         )}
-                                        <div className="flex gap-3 text-sm">
-                                            <Badge variant="secondary">{selectedFood.calories.toFixed(0)} kcal</Badge>
-                                            <Badge variant="outline">P: {selectedFood.protein.toFixed(1)}g</Badge>
-                                            <Badge variant="outline">C: {selectedFood.carbs.toFixed(1)}g</Badge>
-                                            <Badge variant="outline">F: {selectedFood.fats.toFixed(1)}g</Badge>
+                                        <div className="flex flex-wrap gap-2 text-sm">
+                                            <Badge variant="secondary" className="shrink-0">{selectedFood.calories.toFixed(0)} kcal</Badge>
+                                            <Badge variant="outline" className="shrink-0">P: {selectedFood.protein.toFixed(1)}g</Badge>
+                                            <Badge variant="outline" className="shrink-0">C: {selectedFood.carbs.toFixed(1)}g</Badge>
+                                            <Badge variant="outline" className="shrink-0">F: {selectedFood.fats.toFixed(1)}g</Badge>
                                         </div>
                                     </div>
                                     <Button
@@ -218,22 +218,22 @@ export function MealAssignmentDialog({
                             {nutrition && (
                                 <div className="p-4 rounded-lg bg-muted border-2">
                                     <h4 className="font-semibold mb-3">Expected Nutrition</h4>
-                                    <div className="grid grid-cols-4 gap-3">
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-orange-600">{nutrition.calories.toFixed(0)}</div>
-                                            <div className="text-xs text-muted-foreground">Calories</div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div className="text-center p-2 rounded bg-background/50">
+                                            <div className="text-xl sm:text-2xl font-bold text-orange-600">{nutrition.calories.toFixed(0)}</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Calories</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-blue-600">{nutrition.protein.toFixed(1)}</div>
-                                            <div className="text-xs text-muted-foreground">Protein (g)</div>
+                                        <div className="text-center p-2 rounded bg-background/50">
+                                            <div className="text-xl sm:text-2xl font-bold text-blue-600">{nutrition.protein.toFixed(1)}</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Protein (g)</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-green-600">{nutrition.carbs.toFixed(1)}</div>
-                                            <div className="text-xs text-muted-foreground">Carbs (g)</div>
+                                        <div className="text-center p-2 rounded bg-background/50">
+                                            <div className="text-xl sm:text-2xl font-bold text-green-600">{nutrition.carbs.toFixed(1)}</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Carbs (g)</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-purple-600">{nutrition.fats.toFixed(1)}</div>
-                                            <div className="text-xs text-muted-foreground">Fats (g)</div>
+                                        <div className="text-center p-2 rounded bg-background/50">
+                                            <div className="text-xl sm:text-2xl font-bold text-purple-600">{nutrition.fats.toFixed(1)}</div>
+                                            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Fats (g)</div>
                                         </div>
                                     </div>
                                 </div>

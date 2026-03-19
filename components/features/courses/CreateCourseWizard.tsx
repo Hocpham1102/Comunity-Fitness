@@ -741,7 +741,7 @@ export default function CreateCourseWizard({ open, onOpenChange, onSuccess }: Cr
                                 {step1Errors.description && <p className="text-sm text-destructive">{step1Errors.description}</p>}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <Label>Category <span className="text-destructive">*</span></Label>
                                     <Select value={step1.category} onValueChange={v => setS1('category', v)}>
@@ -763,7 +763,7 @@ export default function CreateCourseWizard({ open, onOpenChange, onSuccess }: Cr
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <FileUploadZone
                                     type="thumbnail"
                                     label="Thumbnail Image"
@@ -782,9 +782,9 @@ export default function CreateCourseWizard({ open, onOpenChange, onSuccess }: Cr
 
                     {/* ── STEP 2: Schedule Builder ── */}
                     {step === 2 && (
-                        <div className="flex gap-4 h-[calc(92vh-220px)]">
+                        <div className="flex flex-col lg:flex-row gap-4 h-[calc(92vh-220px)] lg:h-[calc(92vh-220px)]">
                             {/* Left: Template picker */}
-                            <aside className="w-64 shrink-0 flex flex-col border rounded-xl overflow-hidden bg-card">
+                            <aside className="w-full lg:w-64 shrink-0 flex flex-col border rounded-xl overflow-hidden bg-card max-h-[300px] lg:max-h-none">
                                 {/* Tabs */}
                                 <div className="flex border-b shrink-0">
                                     <button onClick={() => { setPickerTab('workout'); setSearch('') }}
@@ -903,8 +903,8 @@ export default function CreateCourseWizard({ open, onOpenChange, onSuccess }: Cr
                                 <h3 className="font-semibold text-sm flex items-center gap-2">
                                     <BookOpen className="w-4 h-4 text-primary" /> Course Summary
                                 </h3>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                    <div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <div className="min-w-0">
                                         <p className="text-xs text-muted-foreground">Title</p>
                                         <p className="font-medium truncate">{step1.title}</p>
                                     </div>
@@ -927,7 +927,7 @@ export default function CreateCourseWizard({ open, onOpenChange, onSuccess }: Cr
                             </div>
 
                             {/* Price + Currency */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <Label>Price <span className="text-destructive">*</span></Label>
                                     <Input type="number" min="0" step="1000"

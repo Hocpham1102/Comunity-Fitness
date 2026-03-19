@@ -190,13 +190,14 @@ export default function AssignWorkoutDialog({
                                                     checked={isSelected}
                                                     disabled={isAssigned}
                                                     onCheckedChange={() => handleToggleClient(client.id)}
+                                                    className="shrink-0"
                                                 />
-                                                <div className="flex-1">
-                                                    <p className="font-medium">{client.name || 'No name'}</p>
-                                                    <p className="text-sm text-muted-foreground">{client.email}</p>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium truncate">{client.name || 'No name'}</p>
+                                                    <p className="text-sm text-muted-foreground truncate">{client.email}</p>
                                                 </div>
                                                 {isAssigned && (
-                                                    <span className="text-xs text-muted-foreground">Already assigned</span>
+                                                    <span className="text-xs text-muted-foreground shrink-0">Already assigned</span>
                                                 )}
                                             </div>
                                         )

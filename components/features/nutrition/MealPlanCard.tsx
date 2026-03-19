@@ -37,9 +37,9 @@ export function MealPlanCard({ plan, onDelete, onAssign }: MealPlanCardProps) {
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="flex-1">
-                        <CardTitle className="flex items-center gap-2">
-                            <Apple className="w-5 h-5 text-green-600" />
-                            {plan.name}
+                        <CardTitle className="flex items-center gap-2 min-w-0">
+                            <Apple className="w-5 h-5 text-green-600 shrink-0" />
+                            <span className="truncate">{plan.name}</span>
                         </CardTitle>
                         {plan.description && (
                             <CardDescription className="mt-1">

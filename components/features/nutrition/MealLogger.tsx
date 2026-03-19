@@ -132,11 +132,11 @@ export function MealLogger({ onSuccess }: MealLoggerProps) {
                                         {selectedFood.description && (
                                             <p className="text-sm text-muted-foreground mb-3">{selectedFood.description}</p>
                                         )}
-                                        <div className="flex gap-3 text-sm">
-                                            <Badge variant="secondary">{selectedFood.calories.toFixed(0)} kcal</Badge>
-                                            <Badge variant="outline">P: {selectedFood.protein.toFixed(1)}g</Badge>
-                                            <Badge variant="outline">C: {selectedFood.carbs.toFixed(1)}g</Badge>
-                                            <Badge variant="outline">F: {selectedFood.fats.toFixed(1)}g</Badge>
+                                        <div className="flex flex-wrap gap-2 text-sm">
+                                            <Badge variant="secondary" className="shrink-0">{selectedFood.calories.toFixed(0)} kcal</Badge>
+                                            <Badge variant="outline" className="shrink-0">P: {selectedFood.protein.toFixed(1)}g</Badge>
+                                            <Badge variant="outline" className="shrink-0">C: {selectedFood.carbs.toFixed(1)}g</Badge>
+                                            <Badge variant="outline" className="shrink-0">F: {selectedFood.fats.toFixed(1)}g</Badge>
                                         </div>
                                     </div>
                                     <Button
@@ -247,7 +247,7 @@ export function MealLogger({ onSuccess }: MealLoggerProps) {
                                         <div className="text-sm text-muted-foreground">kcal</div>
                                     </div>
 
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         <div className="p-3 rounded-lg bg-background border text-center">
                                             <div className="text-xs text-muted-foreground mb-1">Protein</div>
                                             <div className="text-xl font-bold text-blue-600">{nutrition.protein.toFixed(1)}</div>
@@ -258,7 +258,7 @@ export function MealLogger({ onSuccess }: MealLoggerProps) {
                                             <div className="text-xl font-bold text-green-600">{nutrition.carbs.toFixed(1)}</div>
                                             <div className="text-xs text-muted-foreground">g</div>
                                         </div>
-                                        <div className="p-3 rounded-lg bg-background border text-center">
+                                        <div className="p-3 rounded-lg bg-background border text-center col-span-2 sm:col-span-1">
                                             <div className="text-xs text-muted-foreground mb-1">Fats</div>
                                             <div className="text-xl font-bold text-yellow-600">{nutrition.fats.toFixed(1)}</div>
                                             <div className="text-xs text-muted-foreground">g</div>

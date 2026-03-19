@@ -107,14 +107,14 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
             </div>
 
             {/* Exercise Number */}
-            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+            <div className="w-8 h-8 shrink-0 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
               {index + 1}
             </div>
 
             {/* Exercise Info */}
-            <div className="flex-1">
-              <h3 className="font-semibold">{exercise.name}</h3>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold truncate">{exercise.name}</h3>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                 <div className="flex items-center gap-1">
                   <Repeat className="w-3 h-3" />
                   <span>{exercise.sets} sets</span>
@@ -141,7 +141,7 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {isEditing ? (
                 <Button
                   size="sm"
@@ -261,14 +261,14 @@ export function ExerciseConfigurator({ exercises, onExercisesChange }: ExerciseC
     <Accordion type="single" collapsible className="w-full">
       {exercises.map((exercise, index) => (
         <AccordionItem key={exercise.id ?? index} value={exercise.id ?? String(index)}>
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex items-center gap-3 flex-1 text-left">
-              <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+          <AccordionTrigger className="hover:no-underline py-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0 text-left pr-2">
+              <div className="w-8 h-8 shrink-0 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
                 {index + 1}
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">{exercise.name}</h3>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold truncate text-sm sm:text-base">{exercise.name}</h3>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
                   <span>{exercise.sets} sets</span>
                   {exercise.reps && <span>× {exercise.reps} reps</span>}
                   {exercise.duration && <span>× {exercise.duration}s</span>}
