@@ -15,13 +15,14 @@ async function fetchExercise(id: string) {
   return res.json()
 }
 
-export default async function EditExercisePage({ params }: { readonly params: { readonly id: string } }) {
-  const data = await fetchExercise(params.id)
+export default async function EditExercisePage({ params }: { readonly params: Promise<{ readonly id: string }> }) {
+  const { id } = await params
+  const data = await fetchExercise(id)
   // Client submit handler is embedded inside a Client Component pattern; simplified here as server page returning form with defaultValues
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Edit Exercise</h1>
-      <ExerciseEditClient id={params.id} defaultValues={data ?? {}} />
+      <ExerciseEditClient id={id} defaultValues={data ?? {}} />
     </div>
   )
 }

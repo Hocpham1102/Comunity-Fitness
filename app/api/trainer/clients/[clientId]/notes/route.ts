@@ -4,9 +4,10 @@ import { db } from '@/lib/server/db/prisma'
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { clientId: string } }
+    context: { params: Promise<{ clientId: string }> }
 ) {
     try {
+        const { clientId } = await context.params;
         const session = await auth()
 
         if (!session?.user) {
@@ -24,7 +25,7 @@ export async function PATCH(
         const relationship = await db.trainerClient.findFirst({
             where: {
                 trainerId: session.user.id,
-                clientId: params.clientId,
+                clientId,
             },
         })
 
@@ -39,7 +40,7 @@ export async function PATCH(
         const updated = await db.trainerClient.updateMany({
             where: {
                 trainerId: session.user.id,
-                clientId: params.clientId,
+                clientId,
             },
             data: {
                 notes: notes || null,

@@ -89,6 +89,17 @@ export default function TrainerCoursesPage() {
 
     useEffect(() => { fetchCourses() }, [fetchCourses])
 
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            if (params.get('action') === 'create') {
+                setCreateOpen(true)
+                // Remove parameter from URL to prevent reopening on refresh
+                window.history.replaceState(null, '', window.location.pathname)
+            }
+        }
+    }, [])
+
     const handleEdit = async (id: string) => {
         const course = courses.find(c => c.id === id)
         if (!course) return

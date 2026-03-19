@@ -191,11 +191,11 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
 
   const renderExerciseCard = (exercise: Exercise) => (
     <Card key={exercise.id} className="group hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4 h-full flex flex-col">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <h3 className="font-semibold text-sm mb-1">{exercise.name}</h3>
-            <p className="text-xs text-muted-foreground line-clamp-2">
+          <div className="flex-1 min-w-0 pr-2">
+            <h3 className="font-semibold text-sm mb-1 truncate">{exercise.name}</h3>
+            <p className={`text-xs text-muted-foreground ${viewMode === 'grid' ? 'hidden sm:line-clamp-2' : 'line-clamp-2'}`}>
               {exercise.description || 'No description available'}
             </p>
           </div>
@@ -203,35 +203,35 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
             size="sm"
             variant="ghost"
             onClick={() => addExercise(exercise)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
           >
             <Plus className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 mt-auto pt-2">
           {/* Muscle Groups */}
           <div className="flex flex-wrap gap-1">
             {exercise.muscleGroups.slice(0, 3).map((group: string) => (
-              <Badge key={group} variant="secondary" className="text-xs">
+              <Badge key={group} variant="secondary" className="text-[10px] sm:text-xs">
                 {MUSCLE_GROUP_LABELS[group as keyof typeof MUSCLE_GROUP_LABELS]}
               </Badge>
             ))}
             {exercise.muscleGroups.length > 3 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-[10px] sm:text-xs">
                 +{exercise.muscleGroups.length - 3}
               </Badge>
             )}
           </div>
 
           {/* Equipment & Difficulty */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-muted-foreground mt-2">
+            <span className="truncate pr-2">
               {exercise.equipment[0]
                 ? EQUIPMENT_LABELS[exercise.equipment[0] as keyof typeof EQUIPMENT_LABELS]
                 : 'No equipment'}
             </span>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-[10px] sm:text-xs shrink-0">
               {DIFFICULTY_LABELS[exercise.difficulty as keyof typeof DIFFICULTY_LABELS]}
             </Badge>
           </div>
@@ -399,8 +399,8 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
         </div>
       ) : (
         <div className={viewMode === 'grid'
-          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
-          : 'space-y-2'
+          ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4'
+          : 'grid grid-cols-1 gap-3 sm:gap-4'
         }>
           {filteredExercises.map(renderExerciseCard)}
         </div>
@@ -432,11 +432,11 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
               View Selected ({selectedExercises.length})
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent className="w-[85vw] sm:w-[400px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Selected Exercises</SheetTitle>
             </SheetHeader>
-            <div className="mt-6">
+            <div className="mt-6 px-4 pb-4">
               {renderSelectedExercises()}
             </div>
           </SheetContent>
@@ -467,11 +467,11 @@ export function ExerciseSelector({ selectedExercises, onExercisesChange }: Exerc
                       Filters
                     </Button>
                   </SheetTrigger>
-                  <SheetContent>
+                  <SheetContent className="w-[85vw] sm:w-[400px] overflow-y-auto">
                     <SheetHeader>
                       <SheetTitle>Filters</SheetTitle>
                     </SheetHeader>
-                    <div className="mt-6">
+                    <div className="mt-6 px-4 pb-4">
                       {renderFilters()}
                     </div>
                   </SheetContent>

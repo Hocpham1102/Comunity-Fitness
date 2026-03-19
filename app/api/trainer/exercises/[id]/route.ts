@@ -19,9 +19,10 @@ const exerciseSchema = z.object({
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { user } = await verifySession()
 
         // Only trainers can access this endpoint
@@ -30,7 +31,7 @@ export async function GET(
         }
 
         const exercise = await db.exercise.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!exercise) {
@@ -51,9 +52,10 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { user } = await verifySession()
 
         // Only trainers can access this endpoint
@@ -63,7 +65,7 @@ export async function PATCH(
 
         // Check if exercise exists and verify ownership
         const existingExercise = await db.exercise.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!existingExercise) {
@@ -79,7 +81,7 @@ export async function PATCH(
 
         // Update exercise and reset to PENDING if it was REJECTED
         const exercise = await db.exercise.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 name: data.name,
                 description: data.description,
@@ -109,9 +111,10 @@ export async function PATCH(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { user } = await verifySession()
 
         // Only trainers can access this endpoint
@@ -121,7 +124,7 @@ export async function DELETE(
 
         // Check if exercise exists and verify ownership
         const existingExercise = await db.exercise.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!existingExercise) {
@@ -134,7 +137,7 @@ export async function DELETE(
 
         // Delete the exercise
         await db.exercise.delete({
-            where: { id: params.id },
+            where: { id },
         })
 
         return NextResponse.json({ message: 'Exercise deleted successfully' }, { status: 200 })

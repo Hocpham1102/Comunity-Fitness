@@ -58,7 +58,7 @@ export default function CourseStudentsPage({ params }: { params: Promise<{ id: s
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clientId }),
             })
-            
+
             if (res.ok) {
                 notify.success({ title: 'Success', description: 'Invitation sent to student' })
                 fetchStudents() // Refresh list to get updated relationship status
@@ -132,7 +132,7 @@ export default function CourseStudentsPage({ params }: { params: Promise<{ id: s
                                     const initials = student.name?.substring(0, 2).toUpperCase() || 'ST'
                                     const date = new Date(student.enrolledAt).toLocaleDateString('vi-VN')
                                     const isInviting = inviting === student.id
-                                    
+
                                     return (
                                         <tr key={student.id} className="hover:bg-muted/30 transition-colors">
                                             <td className="px-4 py-3">
@@ -184,8 +184,8 @@ export default function CourseStudentsPage({ params }: { params: Promise<{ id: s
                                                         Invited
                                                     </Button>
                                                 ) : (
-                                                    <Button 
-                                                        size="sm" 
+                                                    <Button
+                                                        size="sm"
                                                         className="h-8 gap-1.5"
                                                         onClick={() => handleInvite(student.id)}
                                                         disabled={isInviting}

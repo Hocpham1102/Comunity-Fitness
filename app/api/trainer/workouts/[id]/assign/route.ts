@@ -12,9 +12,10 @@ const assignWorkoutSchema = z.object({
 // POST /api/trainer/workouts/[id]/assign - Assign workout to clients
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { user } = await verifySession()
 
         // Only trainers can assign workouts
@@ -24,7 +25,7 @@ export async function POST(
 
         // Verify workout exists and belongs to trainer
         const workout = await db.workout.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!workout) {
@@ -77,12 +78,12 @@ export async function POST(
                 db.workoutAssignment.upsert({
                     where: {
                         workoutId_clientId: {
-                            workoutId: params.id,
+                            workoutId: id,
                             clientId,
                         },
                     },
                     create: {
-                        workoutId: params.id,
+                        workoutId: id,
                         clientId,
                         trainerId: user.id,
                         notes,
@@ -129,9 +130,10 @@ export async function POST(
 // DELETE /api/trainer/workouts/[id]/assign - Unassign workout from clients
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { user } = await verifySession()
 
         // Only trainers can unassign workouts
@@ -141,7 +143,7 @@ export async function DELETE(
 
         // Verify workout belongs to trainer
         const workout = await db.workout.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!workout) {
@@ -163,7 +165,7 @@ export async function DELETE(
         // Delete assignments
         const result = await db.workoutAssignment.deleteMany({
             where: {
-                workoutId: params.id,
+                workoutId: id,
                 clientId: { in: clientIds },
                 trainerId: user.id,
             },

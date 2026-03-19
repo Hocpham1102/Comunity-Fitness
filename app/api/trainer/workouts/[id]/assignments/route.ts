@@ -5,9 +5,10 @@ import { db } from '@/lib/server/db/prisma'
 // GET /api/trainer/workouts/[id]/assignments - Get all assignments for a workout
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await context.params;
         const { user } = await verifySession()
 
         // Only trainers can view assignments
@@ -17,7 +18,7 @@ export async function GET(
 
         // Verify workout belongs to trainer
         const workout = await db.workout.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!workout) {
@@ -34,7 +35,7 @@ export async function GET(
         // Get all assignments with client details
         const assignments = await db.workoutAssignment.findMany({
             where: {
-                workoutId: params.id,
+                workoutId: id,
                 trainerId: user.id,
             },
             include: {

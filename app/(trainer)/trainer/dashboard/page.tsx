@@ -124,7 +124,7 @@ export default function TrainerDashboard() {
                             </Link>
                         </Button>
                         <Button asChild variant="outline" className="h-auto py-4 flex-col gap-2">
-                            <Link href="/trainer/courses/create">
+                            <Link href="/trainer/courses?action=create">
                                 <Plus className="w-6 h-6" />
                                 <span>Create Course</span>
                             </Link>
